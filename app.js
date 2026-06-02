@@ -309,9 +309,10 @@ function renderCard(p, spotlight) {
     p.github && linkBtn('gh', p.github, 'GitHub')
   ].filter(Boolean).join('');
   const contracts = (p.contracts || []).slice(0, 2).map(c => `
-    <button class="addr" data-copy="${esc(c.address)}" title="Click to copy" type="button">
+    <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" title="${c.verified ? 'Verified on-chain: ' + esc(c.verifiedNote || 'name/symbol/decimals confirmed') : 'Click to copy'}" type="button">
       <span class="chain">${esc(c.chain || 'Dogechain')}</span>
       <span class="addr-txt">${esc(truncateAddr(c.address))}${c.symbol ? ` · ${esc(c.symbol)}` : ''}</span>
+      ${c.verified ? `<span class="verified-tick" aria-label="verified on-chain">✓</span>` : ''}
     </button>`).join('');
   return `
     <article class="card ${p.pending ? 'pending' : ''} ${spotlight ? 'spotlight' : ''}" data-card="${esc(p.id)}" tabindex="0" role="button" aria-label="Open ${esc(p.name)}">
@@ -354,8 +355,8 @@ function renderDetail(p) {
   const cat = categoryDef(p.category);
   const contracts = (p.contracts || []).map(c => `
     <div class="detail-contract">
-      <div class="dc-head"><strong>${esc(c.type || 'contract')}</strong>${c.symbol ? ` · ${esc(c.symbol)}` : ''} <span class="chain-tag">${esc(c.chain || 'Dogechain')}</span></div>
-      <button class="addr" data-copy="${esc(c.address)}" type="button">
+      <div class="dc-head"><strong>${esc(c.type || 'contract')}</strong>${c.symbol ? ` · ${esc(c.symbol)}` : ''} <span class="chain-tag">${esc(c.chain || 'Dogechain')}</span>${c.verified ? `<span class="verified-pill" title="${esc(c.verifiedNote || 'Verified via eth_call')}">✓ verified</span>` : ''}</div>
+      <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" type="button">
         <span class="addr-txt">${esc(c.address)}</span>
         <span class="copy-ico" aria-hidden="true">⧉</span>
       </button>

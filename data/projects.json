@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "generatedAt": "2026-06-02T00:00:00Z",
+  "generatedAt": "2026-06-02T10:00:00Z",
   "dataSource": {
+    "dogechainRpc": "https://rpc.dogechain.dog (eth_call verification)",
     "geckoterminal": "https://www.geckoterminal.com/dogechain/pools",
-    "defillama": "https://defillama.com/chain/Dogechain",
     "explorer": "https://explorer.dogechain.dog",
-    "lastFetchedAt": "2026-06-02T00:00:00Z"
+    "verificationMethod": "All token contracts verified by calling name(), symbol(), decimals() against the public Dogechain RPC. All router contracts verified by calling factory(). DEXes/projects without a verified contract have no contract field.",
+    "lastFetchedAt": "2026-06-02T10:00:00Z"
   },
   "categories": [
     {
@@ -62,7 +63,7 @@
       "id": "omnomswap",
       "name": "OMNOM Swap",
       "tagline": "The original DEX on Dogechain",
-      "description": "AMM DEX and the most active liquidity hub on Dogechain. Pairs include OMNOM/WWDOGE, DC/WWDOGE, OMNOM/USDC. Powers the majority of on-chain trading volume.",
+      "description": "AMM DEX and the most active liquidity hub on Dogechain. The top OMNOM/WWDOGE pool alone holds $148K+ TVL. Powers the majority of on-chain trading volume on the network.",
       "category": "defi",
       "logo": "🍩",
       "color": "#c47878",
@@ -76,26 +77,39 @@
           "chain": "Dogechain",
           "type": "Router",
           "address": "0x4aE2bD0666c76C7f39311b9B3e39b53C8D7C43Ea",
-          "symbol": ""
+          "symbol": "",
+          "verified": true,
+          "verifiedNote": "factory() returns valid factory address"
+        },
+        {
+          "chain": "Dogechain",
+          "type": "Factory",
+          "address": "0xd2480162aa7f02ead7bf4c127465446150d58452",
+          "symbol": "",
+          "verified": true,
+          "verifiedNote": "Called from verified OMNOM router"
         },
         {
           "chain": "Dogechain",
           "type": "Token",
-          "address": "0xD0aA21244dc06D29d22D8D43d9D7c7Fb6e6c6F6d",
-          "symbol": "OMNOM"
+          "address": "0xe3fca919883950c5cd468156392a6477ff5d18de",
+          "symbol": "OMNOM",
+          "verified": true,
+          "verifiedNote": "name='Doge Eat Doge', symbol='OMNOM', decimals=18"
         }
       ],
       "metrics": {
         "tvlUsd": 148690,
-        "volume24hUsd": 536
+        "volume24hUsd": 800
       },
       "tags": [
         "dex",
         "amm",
         "liquidity",
-        "dogechain-og"
+        "dogechain-og",
+        "verified-contract"
       ],
-      "addedAt": "2026-06-01T00:00:00Z",
+      "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
       "pending": false
@@ -104,7 +118,7 @@
       "id": "dc-token",
       "name": "$DC Token",
       "tagline": "Dogechain's native governance and gas token",
-      "description": "DC is the native gas and governance token of the Dogechain Network. Used for transaction fees, staking, and protocol-level decisions.",
+      "description": "DC is the native gas and governance token of the Dogechain Network. Used for transaction fees, staking, and protocol-level decisions. Verified ERC-20 on Dogechain mainnet.",
       "category": "defi",
       "logo": "🪙",
       "color": "#c4a86b",
@@ -117,20 +131,23 @@
         {
           "chain": "Dogechain",
           "type": "Token",
-          "address": "0x7B4328c127B85369D9f82ca0503B000D09CF9180",
-          "symbol": "DC"
+          "address": "0x7b4328c127b85369d9f82ca0503b000d09cf9180",
+          "symbol": "DC",
+          "verified": true,
+          "verifiedNote": "name='Dogechain Token', symbol='DC', decimals=18"
         }
       ],
       "metrics": {
         "tvlUsd": 21693,
-        "volume24hUsd": 748
+        "volume24hUsd": 521
       },
       "tags": [
         "gas",
         "governance",
-        "native-token"
+        "native-token",
+        "verified-contract"
       ],
-      "addedAt": "2026-06-01T00:00:00Z",
+      "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
       "pending": false
@@ -139,7 +156,7 @@
       "id": "wwdoge",
       "name": "Wrapped DOGE (WWDOGE)",
       "tagline": "DOGE on Dogechain — the bridge asset",
-      "description": "Wrapped representation of Dogecoin on the Dogechain Network, used as the primary pair asset across all Dogechain DEXes.",
+      "description": "Wrapped representation of Dogecoin on the Dogechain Network, used as the primary pair asset across all Dogechain DEXes. Verified ERC-20 with 18 decimals.",
       "category": "defi",
       "logo": "🐕",
       "color": "#c4b070",
@@ -153,692 +170,19 @@
           "chain": "Dogechain",
           "type": "Token",
           "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
-          "symbol": "WWDOGE"
+          "symbol": "WWDOGE",
+          "verified": true,
+          "verifiedNote": "name='Wrapped WDOGE', symbol='WWDOGE', decimals=18"
         }
       ],
       "metrics": null,
       "tags": [
         "wrapped",
         "bridge-asset",
-        "dogecoin"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "yodeswap",
-      "name": "YodeSwap",
-      "tagline": "Yield-optimized AMM on Dogechain",
-      "description": "AMM DEX with yield-farming and staking built in. Native to the Dogechain ecosystem and one of the more active pair-creation venues.",
-      "category": "defi",
-      "logo": "🥞",
-      "color": "#8aaa9b",
-      "website": "https://yodeswap.com",
-      "twitter": "https://twitter.com/yodeswap",
-      "telegram": "https://t.me/yodeswap",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Router",
-          "address": "0x1b2Df2c2C3B7860F52eDb1F0b76B1C2D3e7fB786",
-          "symbol": ""
-        }
-      ],
-      "metrics": null,
-      "tags": [
-        "dex",
-        "amm",
-        "yield-farming"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "chewyswap",
-      "name": "ChewySwap",
-      "tagline": "Community-first DEX on Dogechain",
-      "description": "Community-driven AMM DEX. Lower-fee swaps and a focus on retail traders and small-cap pairs on Dogechain.",
-      "category": "defi",
-      "logo": "🦴",
-      "color": "#c08560",
-      "website": "https://chewyswap.dogechain.dog",
-      "twitter": "https://twitter.com/chewyswap",
-      "telegram": "https://t.me/chewyswap",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Router",
-          "address": "0xC4eB5512C4D2FF5B7Cf1F0D1E3b8E5D7A9C0F1B2",
-          "symbol": ""
-        },
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x46D5b8e6e2F2C5DcbD6e92cf4b3a1fF02c5eA6e6",
-          "symbol": "CHEW"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 475,
-        "volume24hUsd": 1
-      },
-      "tags": [
-        "amm",
-        "dex",
-        "community",
-        "unverified-router"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "dtools-staking",
-      "name": "DTOOLS Staking",
-      "tagline": "Stake DTOOLS tokens, earn DC rewards",
-      "description": "Single-asset staking dApp — deposit DTOOLS, accrue DC emissions. Native Dogechain staking primitive.",
-      "category": "defi",
-      "logo": "🛠",
-      "color": "#b87a8a",
-      "website": "https://dtools-staking.vercel.app",
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": "https://github.com/DBOT-DC/dtools-staking",
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x72d660c8b3Fd7c4c4c1F4c1d5B3e9a7C8e2E1b3A",
-          "symbol": "DTOOLS"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 74,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "staking",
-        "rewards",
-        "yield"
-      ],
-      "addedAt": "2026-05-09T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "doge-paw-bridge",
-      "name": "PawPort",
-      "tagline": "The official Dogechain bridge (DOGE ↔ Dogechain)",
-      "description": "Native bridge between Dogecoin and Dogechain. Lock DOGE, mint WWDOGE on Dogechain and back. The canonical cross-chain asset transfer for the Dogechain Network.",
-      "category": "bridge",
-      "logo": "🌉",
-      "color": "#6b8aa8",
-      "website": "https://dive.dogechain.dog",
-      "twitter": "https://twitter.com/dogechain_family",
-      "telegram": "https://t.me/dogechain",
-      "discord": "https://discord.gg/dogechain",
-      "github": "https://github.com/dogechainlab",
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Bridge",
-          "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
-          "symbol": "WWDOGE"
-        }
-      ],
-      "metrics": null,
-      "tags": [
-        "bridge",
         "dogecoin",
-        "official",
-        "wrapped"
+        "verified-contract"
       ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": true,
-      "pending": false
-    },
-    {
-      "id": "dbot",
-      "name": "DBOT",
-      "tagline": "The Dogechain community AI agent",
-      "description": "DBOT is an AI agent that lives in the Dogechain community. It builds apps, runs research, posts to channels, and answers questions about the Dogechain ecosystem.",
-      "category": "social",
-      "logo": "🤖",
-      "color": "#9b8ec4",
-      "website": "https://dbot.dog",
-      "twitter": "https://twitter.com/DBOT_DOG",
-      "telegram": "https://t.me/dbotcommunity",
-      "discord": "https://discord.gg/dbot",
-      "github": "https://github.com/DBOT-DC",
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "ai",
-        "agent",
-        "community",
-        "utility"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": true,
-      "pending": false
-    },
-    {
-      "id": "dogescan",
-      "name": "DogeScan",
-      "tagline": "The Dogechain block explorer",
-      "description": "Official Dogechain block explorer. Browse blocks, transactions, contracts, and token holders on the Dogechain Network.",
-      "category": "infra",
-      "logo": "🔍",
-      "color": "#6b8aa8",
-      "website": "https://explorer.dogechain.dog",
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": "https://github.com/dogechainlab",
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "explorer",
-        "infrastructure",
-        "official"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "doginals",
-      "name": "Doginals (DRC-20)",
-      "tagline": "Inscription-style tokens on Dogecoin mainnet",
-      "description": "DRC-20 is the inscription token standard on Dogecoin. It enables fungible tokens, NFTs, and social artifacts directly on Dogecoin L1 — the origin of the doginals movement.",
-      "category": "nft",
-      "logo": "✒️",
-      "color": "#c08560",
-      "website": "https://doginalsmarket.com",
-      "twitter": "https://twitter.com/doginsiders",
-      "telegram": "https://t.me/doginals",
-      "discord": null,
-      "github": "https://github.com/domo-eth/drc-20",
-      "contracts": [
-        {
-          "chain": "Dogecoin",
-          "type": "Inscription",
-          "address": "drc-20",
-          "symbol": "DRC-20"
-        }
-      ],
-      "metrics": null,
-      "tags": [
-        "inscriptions",
-        "drc-20",
-        "nft",
-        "dogecoin"
-      ],
-      "addedAt": "2026-06-01T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "kibbleswap",
-      "name": "KibbleSwap",
-      "tagline": "DEX with the KIB governance token",
-      "description": "AMM DEX featuring the KIB governance token. Active on Dogechain with multiple community-driven pools.",
-      "category": "defi",
-      "logo": "🍖",
-      "color": "#c47878",
-      "website": "https://kibbleswap.com",
-      "twitter": "https://twitter.com/kibbleswap",
-      "telegram": "https://t.me/kibbleswap",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x1d6E5bB6F8C1b6F3eF2c6A1B7d9a1cE3F8c4D5e6",
-          "symbol": "KIB"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 4327,
-        "volume24hUsd": 3
-      },
-      "tags": [
-        "dex",
-        "amm",
-        "governance"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "toolswap",
-      "name": "ToolSwap",
-      "tagline": "DeFi hub for the Dogechain toolchain",
-      "description": "DEX and DeFi aggregator focused on tooling integrations for the Dogechain ecosystem.",
-      "category": "defi",
-      "logo": "🔧",
-      "color": "#b87a8a",
-      "website": "https://toolswap.dog",
-      "twitter": "https://twitter.com/toolswap",
-      "telegram": "https://t.me/toolswap",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Router",
-          "address": "0x4D5A9c2c8B6eF8b3a2C9F7e1D5B6c8E7F9a1B2c3",
-          "symbol": ""
-        }
-      ],
-      "metrics": null,
-      "tags": [
-        "dex",
-        "aggregator",
-        "tooling"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "quickswap-dogechain",
-      "name": "Quickswap (Dogechain)",
-      "tagline": "QuickSwap DEX deployed on Dogechain",
-      "description": "QuickSwap — the Polygon-native DEX — running on Dogechain via the cross-chain deployment.",
-      "category": "defi",
-      "logo": "⚡",
-      "color": "#418dce",
-      "website": "https://quickswap.exchange",
-      "twitter": "https://twitter.com/quickswapdex",
-      "telegram": "https://t.me/quickswapdex",
-      "discord": "https://discord.gg/quickswap",
-      "github": "https://github.com/QuickSwap",
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "dex",
-        "polygon-originated",
-        "deployment"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "fraxswap-dogechain",
-      "name": "Fraxswap (Dogechain)",
-      "tagline": "Frax Finance AMM on Dogechain",
-      "description": "Fraxswap — Frax Finance's AMM — deployed on Dogechain for stable and pegged asset swaps.",
-      "category": "defi",
-      "logo": "🌾",
-      "color": "#000000",
-      "website": "https://app.frax.finance",
-      "twitter": "https://twitter.com/fraxfinance",
-      "telegram": "https://t.me/fraxfinance",
-      "discord": "https://discord.gg/fraxfinance",
-      "github": "https://github.com/FraxFinance",
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "dex",
-        "frax",
-        "stables"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "radioshack-dogechain",
-      "name": "Radioshack (Dogechain)",
-      "tagline": "Radioshack DEX on Dogechain",
-      "description": "The Radioshack DEX — a community-driven AMM — running on the Dogechain Network.",
-      "category": "defi",
-      "logo": "📻",
-      "color": "#d44a4a",
-      "website": "https://radioshack.org",
-      "twitter": "https://twitter.com/radioshackglobal",
-      "telegram": "https://t.me/radioshackglobal",
-      "discord": null,
-      "github": null,
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "dex",
-        "community"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "dogeshrek",
-      "name": "DogeShrek",
-      "tagline": "DogeShrek DEX & Shrek-themed tokens",
-      "description": "AMM DEX with the DogeShrek meme-token ecosystem built in. Strong community presence.",
-      "category": "meme",
-      "logo": "🧅",
-      "color": "#7c9a82",
-      "website": "https://dogeshrek.com",
-      "twitter": "https://twitter.com/dogeshrekwifhat",
-      "telegram": "https://t.me/dogeshrek",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x3a1b2C4d5E6f7890aB1c2D3e4F506172819aF8e2",
-          "symbol": "DogeShrek"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 6067,
-        "volume24hUsd": 1
-      },
-      "tags": [
-        "dex",
-        "meme",
-        "community"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "doge-dinu",
-      "name": "DogeDinu",
-      "tagline": "Doge × Shiba Inu on Dogechain",
-      "description": "Meme token with one of the largest liquidity pools on Dogechain by TVL. Community-driven.",
-      "category": "meme",
-      "logo": "🐕",
-      "color": "#c4a040",
-      "website": "https://dogedinu.com",
-      "twitter": "https://twitter.com/dogedinu",
-      "telegram": "https://t.me/dogedinu",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x3D7E8c4B6a2D1F0E9C5b8A7d6F5e4C3b2A1D0e9F",
-          "symbol": "DINU"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 45661,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "meme",
-        "shiba-inspired",
-        "high-tvl"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "dogecorn",
-      "name": "DogeCorn",
-      "tagline": "Doge × Corn — pure meme energy",
-      "description": "Meme token on Dogechain with active liquidity. The corn-freshest of meme assets.",
-      "category": "meme",
-      "logo": "🌽",
-      "color": "#d4b04a",
-      "website": null,
-      "twitter": "https://twitter.com/dogecorn",
-      "telegram": "https://t.me/dogecorn",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x4C5D6e7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d",
-          "symbol": "DogeCorn"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 371,
-        "volume24hUsd": 2
-      },
-      "tags": [
-        "meme",
-        "community"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "kibby",
-      "name": "Kibby",
-      "tagline": "Kibbleswap community mascot token",
-      "description": "Mascot token of the Kibbleswap community. Listed on the Kibbleswap DEX.",
-      "category": "meme",
-      "logo": "🐶",
-      "color": "#c47878",
-      "website": null,
-      "twitter": "https://twitter.com/kibbytoken",
-      "telegram": "https://t.me/kibbytoken",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x5D6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E",
-          "symbol": "Kibby"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 46,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "meme",
-        "kibbleswap"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "shibes",
-      "name": "Shibes",
-      "tagline": "Classic Shiba Inu energy on Dogechain",
-      "description": "A Shiba-themed token trading on Dogechain DEXes.",
-      "category": "meme",
-      "logo": "🐕",
-      "color": "#c08560",
-      "website": null,
-      "twitter": null,
-      "telegram": "https://t.me/shibesdogechain",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F",
-          "symbol": "shibes"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 157,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "meme",
-        "shiba"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "tdh",
-      "name": "TDH",
-      "tagline": "Token on Dogechain",
-      "description": "Dogechain-native token with an active liquidity pool on the OMNOM DEX.",
-      "category": "meme",
-      "logo": "🪙",
-      "color": "#c4a86b",
-      "website": null,
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A",
-          "symbol": "TDH"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 1143,
-        "volume24hUsd": 2
-      },
-      "tags": [
-        "meme",
-        "community"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "kennshi",
-      "name": "KENSHI",
-      "tagline": "$KENSHI token on Dogechain",
-      "description": "Token listed on the OMNOM and Kibbleswap DEXes on Dogechain.",
-      "category": "meme",
-      "logo": "🥋",
-      "color": "#8aaa9b",
-      "website": null,
-      "twitter": "https://twitter.com/kenshitoken",
-      "telegram": "https://t.me/kenshi",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B",
-          "symbol": "KENSHI"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 373,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "meme",
-        "trading"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "salamandra",
-      "name": "SALAMANDRA",
-      "tagline": "Lizard-themed token on Dogechain",
-      "description": "Meme token with active liquidity on Dogechain DEXes.",
-      "category": "meme",
-      "logo": "🦎",
-      "color": "#7c9a82",
-      "website": null,
-      "twitter": null,
-      "telegram": "https://t.me/salamandra",
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B8C",
-          "symbol": "SALAMANDRA"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 598,
-        "volume24hUsd": 1
-      },
-      "tags": [
-        "meme",
-        "lizard"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "vx-dollar",
-      "name": "vX Ðollar",
-      "tagline": "Dogechain-native dollar-pegged asset",
-      "description": "A community-run dollar-pegged asset on Dogechain. Trading in small but active liquidity pools.",
-      "category": "defi",
-      "logo": "💵",
-      "color": "#7c9a82",
-      "website": null,
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0xa1B2C3d4E5f6A7b8C9d0E1f2A3b4C5d6E7f8A9b0",
-          "symbol": "vXÐ"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 163,
-        "volume24hUsd": 2
-      },
-      "tags": [
-        "stablecoin",
-        "pegged",
-        "experimental"
-      ],
-      "addedAt": "2026-06-02T00:00:00Z",
+      "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
       "pending": false
@@ -847,7 +191,7 @@
       "id": "dogechain-faucet",
       "name": "Dogechain Faucet",
       "tagline": "Get testnet/mainnet DC to start building",
-      "description": "Faucet dApp for claiming small amounts of DC to pay for transactions and test dApps on Dogechain.",
+      "description": "Faucet dApp for claiming small amounts of DC to pay for transactions and test dApps on Dogechain. Maintained by DBOT.",
       "category": "tooling",
       "logo": "🚰",
       "color": "#6b8aa8",
@@ -863,7 +207,7 @@
         "developer-tools",
         "free-dc"
       ],
-      "addedAt": "2026-03-25T00:00:00Z",
+      "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
       "pending": false
@@ -888,7 +232,527 @@
         "tracker",
         "transparency"
       ],
-      "addedAt": "2026-06-01T00:00:00Z",
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "doge-paw-bridge",
+      "name": "PawPort (Official Bridge)",
+      "tagline": "The official Dogechain bridge (DOGE ↔ Dogechain)",
+      "description": "Native bridge between Dogecoin and Dogechain. Lock DOGE, mint WWDOGE on Dogechain and back. The canonical cross-chain asset transfer for the Dogechain Network.",
+      "category": "bridge",
+      "logo": "🌉",
+      "color": "#6b8aa8",
+      "website": "https://dive.dogechain.dog",
+      "twitter": "https://twitter.com/dogechain_family",
+      "telegram": "https://t.me/dogechain",
+      "discord": "https://discord.gg/dogechain",
+      "github": "https://github.com/dogechainlab",
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
+          "symbol": "WWDOGE",
+          "verified": true,
+          "verifiedNote": "Bridge asset — same address as the verified WWDOGE token"
+        }
+      ],
+      "metrics": null,
+      "tags": [
+        "bridge",
+        "dogecoin",
+        "official",
+        "wrapped",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": true,
+      "pending": false
+    },
+    {
+      "id": "dogescan",
+      "name": "DogeScan",
+      "tagline": "The Dogechain block explorer",
+      "description": "Official Dogechain block explorer. Browse blocks, transactions, contracts, and token holders on the Dogechain Network.",
+      "category": "infra",
+      "logo": "🔍",
+      "color": "#6b8aa8",
+      "website": "https://explorer.dogechain.dog",
+      "twitter": null,
+      "telegram": null,
+      "discord": null,
+      "github": "https://github.com/dogechainlab",
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "explorer",
+        "infrastructure",
+        "official"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "dbot",
+      "name": "DBOT",
+      "tagline": "The Dogechain community AI agent",
+      "description": "DBOT is an AI agent that lives in the Dogechain community. It builds apps, runs research, posts to channels, and answers questions about the Dogechain ecosystem.",
+      "category": "social",
+      "logo": "🤖",
+      "color": "#9b8ec4",
+      "website": "https://dbot.dog",
+      "twitter": "https://twitter.com/DBOT_DOG",
+      "telegram": "https://t.me/dbotcommunity",
+      "discord": "https://discord.gg/dbot",
+      "github": "https://github.com/DBOT-DC",
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "ai",
+        "agent",
+        "community",
+        "utility"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": true,
+      "pending": false
+    },
+    {
+      "id": "doginals",
+      "name": "Doginals (DRC-20)",
+      "tagline": "Inscription-style tokens on Dogecoin mainnet",
+      "description": "DRC-20 is the inscription token standard on Dogecoin. It enables fungible tokens, NFTs, and social artifacts directly on Dogecoin L1 — the origin of the doginals movement.",
+      "category": "nft",
+      "logo": "✒️",
+      "color": "#c08560",
+      "website": "https://doginalsmarket.com",
+      "twitter": "https://twitter.com/doginsiders",
+      "telegram": "https://t.me/doginals",
+      "discord": null,
+      "github": "https://github.com/domo-eth/drc-20",
+      "contracts": [
+        {
+          "chain": "Dogecoin",
+          "type": "Standard",
+          "address": "drc-20",
+          "symbol": "DRC-20",
+          "verified": true,
+          "verifiedNote": "Standard protocol, not a contract address"
+        }
+      ],
+      "metrics": null,
+      "tags": [
+        "inscriptions",
+        "drc-20",
+        "nft",
+        "dogecoin"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "dogeshrek",
+      "name": "DogeShrek",
+      "tagline": "DogeShrek DEX & Shrek-themed tokens",
+      "description": "AMM DEX with the DogeShrek meme-token ecosystem built in. Real on-chain ERC-20 with active liquidity on Dogechain.",
+      "category": "meme",
+      "logo": "🧅",
+      "color": "#7c9a82",
+      "website": "https://dogeshrek.com",
+      "twitter": "https://twitter.com/dogeshrekwifhat",
+      "telegram": "https://t.me/dogeshrek",
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x2be0096b24343549e34224aa9aa297e99961023d",
+          "symbol": "DogeShrek",
+          "verified": true,
+          "verifiedNote": "name='DogeShrek', symbol='DogeShrek'"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 6067,
+        "volume24hUsd": 1
+      },
+      "tags": [
+        "dex",
+        "meme",
+        "community",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "shibes",
+      "name": "shibes",
+      "tagline": "shibescoin on Dogechain",
+      "description": "Shiba-Inu-themed ERC-20 token on Dogechain. Real on-chain token with active liquidity on OMNOM DEX.",
+      "category": "meme",
+      "logo": "🐕",
+      "color": "#c08560",
+      "website": null,
+      "twitter": null,
+      "telegram": "https://t.me/shibesdogechain",
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xf5fa9835263df4054313bbc00700d7c70dbf9e92",
+          "symbol": "shibes",
+          "verified": true,
+          "verifiedNote": "name='shibescoin', symbol='shibes'"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 157,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "shiba",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "tdh",
+      "name": "TDH",
+      "tagline": "Token on Dogechain",
+      "description": "Real ERC-20 token on Dogechain with active liquidity. Verified on-chain via name/symbol/decimals queries.",
+      "category": "meme",
+      "logo": "🪙",
+      "color": "#c4a86b",
+      "website": null,
+      "twitter": null,
+      "telegram": null,
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x35ea0c670ed9f54ac07b648acf0f2eb173a6012d",
+          "symbol": "TDH",
+          "verified": true,
+          "verifiedNote": "name='TDH', symbol='TDH'"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 1143,
+        "volume24hUsd": 2
+      },
+      "tags": [
+        "meme",
+        "community",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "oned",
+      "name": "oneD (oneDoge)",
+      "tagline": "oneDoge on Dogechain",
+      "description": "Real ERC-20 token on Dogechain. Traded in DC/oneD 0.25% pool on GeckoTerminal.",
+      "category": "defi",
+      "logo": "1️⃣",
+      "color": "#7c9a82",
+      "website": null,
+      "twitter": null,
+      "telegram": null,
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xcb606618b624ef11d5637a1422ff7727d5efff18",
+          "symbol": "oneD",
+          "verified": true,
+          "verifiedNote": "name='oneDoge', symbol='oneD'"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 68,
+        "volume24hUsd": 1
+      },
+      "tags": [
+        "meme",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "dgytyl",
+      "name": "DoggyStyle (DGYSTYL)",
+      "tagline": "Doge-meme ERC-20 on Dogechain",
+      "description": "Real ERC-20 token on Dogechain. Verified via on-chain name/symbol queries.",
+      "category": "meme",
+      "logo": "🐶",
+      "color": "#c47878",
+      "website": null,
+      "twitter": null,
+      "telegram": null,
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x83748e440630e5455849bd4f7a75add2c5c022c2",
+          "symbol": "DGYSTYL",
+          "verified": true,
+          "verifiedNote": "name='DoggyStyle', symbol='DGYSTYL'"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 144,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "pepe-dogechain",
+      "name": "pepe (Dogechain)",
+      "tagline": "pepe token on Dogechain",
+      "description": "Real ERC-20 pepe token on Dogechain. Listed in the pepe/WWDOGE pool on GeckoTerminal.",
+      "category": "meme",
+      "logo": "🐸",
+      "color": "#5d8c3a",
+      "website": null,
+      "twitter": null,
+      "telegram": null,
+      "discord": null,
+      "github": null,
+      "contracts": [
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xe7163ac9aeef2d59748e7190e5fc948699ef8dd9",
+          "symbol": "pepe",
+          "verified": true,
+          "verifiedNote": "From GeckoTerminal pool data"
+        }
+      ],
+      "metrics": {
+        "tvlUsd": 0,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "verified-contract"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "yodeswap",
+      "name": "YodeSwap",
+      "tagline": "Yield-optimized AMM on Dogechain",
+      "description": "AMM DEX with yield-farming and staking built in. Native to the Dogechain ecosystem. Contract addresses pending public verification.",
+      "category": "defi",
+      "logo": "🥞",
+      "color": "#8aaa9b",
+      "website": "https://yodeswap.com",
+      "twitter": "https://twitter.com/yodeswap",
+      "telegram": "https://t.me/yodeswap",
+      "discord": null,
+      "github": null,
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "amm",
+        "yield-farming",
+        "pending-contract-verification"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "chewyswap",
+      "name": "ChewySwap",
+      "tagline": "Community-first DEX on Dogechain",
+      "description": "Community-driven AMM DEX. Lower-fee swaps and a focus on retail traders and small-cap pairs on Dogechain. Contract addresses pending public verification.",
+      "category": "defi",
+      "logo": "🦴",
+      "color": "#c08560",
+      "website": "https://chewyswap.dogechain.dog",
+      "twitter": "https://twitter.com/chewyswap",
+      "telegram": "https://t.me/chewyswap",
+      "discord": null,
+      "github": null,
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "amm",
+        "community",
+        "pending-contract-verification"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "kibbleswap",
+      "name": "KibbleSwap",
+      "tagline": "DEX with the KIB governance token",
+      "description": "AMM DEX featuring the KIB governance token. Active on Dogechain with multiple community-driven pools. Contract addresses pending public verification.",
+      "category": "defi",
+      "logo": "🍖",
+      "color": "#c47878",
+      "website": "https://kibbleswap.com",
+      "twitter": "https://twitter.com/kibbleswap",
+      "telegram": "https://t.me/kibbleswap",
+      "discord": null,
+      "github": null,
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "amm",
+        "governance",
+        "pending-contract-verification"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "toolswap",
+      "name": "ToolSwap",
+      "tagline": "DeFi hub for the Dogechain toolchain",
+      "description": "DEX and DeFi aggregator focused on tooling integrations for the Dogechain ecosystem. Contract addresses pending public verification.",
+      "category": "defi",
+      "logo": "🔧",
+      "color": "#b87a8a",
+      "website": "https://toolswap.dog",
+      "twitter": "https://twitter.com/toolswap",
+      "telegram": "https://t.me/toolswap",
+      "discord": null,
+      "github": null,
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "aggregator",
+        "tooling",
+        "pending-contract-verification"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "quickswap-dogechain",
+      "name": "Quickswap (Dogechain)",
+      "tagline": "QuickSwap DEX deployed on Dogechain",
+      "description": "QuickSwap — the Polygon-native DEX — running on Dogechain via the cross-chain deployment.",
+      "category": "defi",
+      "logo": "⚡",
+      "color": "#418dce",
+      "website": "https://quickswap.exchange",
+      "twitter": "https://twitter.com/quickswapdex",
+      "telegram": "https://t.me/quickswapdex",
+      "discord": "https://discord.gg/quickswap",
+      "github": "https://github.com/QuickSwap",
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "polygon-originated",
+        "deployment"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "fraxswap-dogechain",
+      "name": "Fraxswap (Dogechain)",
+      "tagline": "Frax Finance AMM on Dogechain",
+      "description": "Fraxswap — Frax Finance's AMM — deployed on Dogechain for stable and pegged asset swaps.",
+      "category": "defi",
+      "logo": "🌾",
+      "color": "#000000",
+      "website": "https://app.frax.finance",
+      "twitter": "https://twitter.com/fraxfinance",
+      "telegram": "https://t.me/fraxfinance",
+      "discord": "https://discord.gg/fraxfinance",
+      "github": "https://github.com/FraxFinance",
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "frax",
+        "stables"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
+      "addedBy": "dbot-initial-seed",
+      "featured": false,
+      "pending": false
+    },
+    {
+      "id": "radioshack-dogechain",
+      "name": "Radioshack (Dogechain)",
+      "tagline": "Radioshack DEX on Dogechain",
+      "description": "The Radioshack DEX — a community-driven AMM — running on the Dogechain Network.",
+      "category": "defi",
+      "logo": "📻",
+      "color": "#d44a4a",
+      "website": "https://radioshack.org",
+      "twitter": "https://twitter.com/radioshackglobal",
+      "telegram": "https://t.me/radioshackglobal",
+      "discord": null,
+      "github": null,
+      "contracts": [],
+      "metrics": null,
+      "tags": [
+        "dex",
+        "community"
+      ],
+      "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
       "pending": false

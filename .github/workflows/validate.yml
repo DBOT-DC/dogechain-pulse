@@ -17,24 +17,28 @@ jobs:
         run: |
           node -e "
             const data = require('./data/projects.json');
-            const errs = [];
+            const errs = [], warns = [];
             if (!data.version) errs.push('Missing version');
             if (!Array.isArray(data.categories)) errs.push('categories not an array');
             if (!Array.isArray(data.projects)) errs.push('projects not an array');
             const catIds = new Set((data.categories||[]).map(c => c.id));
             for (const p of data.projects) {
               if (!p.id) errs.push('Project missing id');
-              if (!p.name) errs.push(\`Project \${p.id||'?'} missing name\`);
-              if (!catIds.has(p.category)) errs.push(\`Project \${p.id||'?'} has unknown category '\${p.category}'\`);
+              if (!p.name) errs.push('Project ' + (p.id||'?') + ' missing name');
+              if (!catIds.has(p.category)) errs.push('Project ' + p.id + ' has unknown category ' + p.category);
               if (p.contracts) for (const c of p.contracts) {
-                if (c.address && !/^0x[a-fA-F0-9]{40}$|^drc-20$/.test(c.address)) errs.push(\`Project \${p.id} has malformed address: \${c.address}\`);
+                if (c.address && !/^0x[a-fA-F0-9]{40}$|^drc-20$/.test(c.address)) errs.push('Project ' + p.id + ' has malformed address: ' + c.address);
+                if (c.address && c.address !== 'drc-20' && !c.verified) warns.push('Project ' + p.id + ' has unverified contract: ' + c.address);
               }
             }
             const ids = data.projects.map(p => p.id);
             const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
             if (dupes.length) errs.push('Duplicate project ids: ' + dupes.join(', '));
+            const verified = (data.projects || []).reduce((n, p) => n + (p.contracts||[]).filter(c => c.verified).length, 0);
+            const total = (data.projects || []).reduce((n, p) => n + (p.contracts||[]).length, 0);
             if (errs.length) { console.error('FAIL:'); errs.forEach(e => console.error('  -', e)); process.exit(1); }
-            console.log(\`OK: \${data.projects.length} projects across \${data.categories.length} categories\`);
+            if (warns.length) { console.log('WARNINGS:'); warns.forEach(w => console.log('  -', w)); }
+            console.log('OK: ' + data.projects.length + ' projects, ' + data.categories.length + ' categories, ' + verified + '/' + total + ' contracts verified');
           "
       - name: Validate JSON in pages
         run: |

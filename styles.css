@@ -522,3 +522,29 @@ dialog.detail {
   .hero-stats, .toolbar, .catbar, .foot, .toast { display: none; }
   .card { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
 }
+
+/* ─── Verified on-chain badges ───────────────────────────────────── */
+.addr.verified {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 8%, var(--bg-3));
+}
+.addr.verified:hover {
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 14%, var(--bg-3));
+}
+.verified-tick {
+  display: inline-grid; place-items: center;
+  width: 16px; height: 16px; border-radius: 999px;
+  background: var(--good); color: var(--bg);
+  font-size: 10px; font-weight: 700; line-height: 1;
+  flex-shrink: 0; margin-left: 4px;
+}
+.verified-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+  background: color-mix(in srgb, var(--good) 18%, transparent);
+  color: var(--good);
+  border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
+  margin-left: 6px;
+}
