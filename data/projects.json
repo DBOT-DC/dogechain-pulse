@@ -1,12 +1,12 @@
 {
-  "version": 3,
-  "generatedAt": "2026-06-02T12:00:00Z",
+  "version": 4,
+  "generatedAt": "2026-06-02T18:00:00Z",
   "dataSource": {
     "dogechainRpc": "https://rpc.dogechain.dog (eth_call verification)",
     "geckoterminal": "https://www.geckoterminal.com/dogechain/pools",
     "explorer": "https://explorer.dogechain.dog",
     "verificationMethod": "Every token contract verified by calling name(), symbol(), decimals() against the Dogechain RPC. Every router verified by calling factory(). Every social link checked via HTTP HEAD/GET + content analysis (Telegram preview pages, X handle responses). Listings with dead websites, dead GitHub repos, and no verified contracts have been removed.",
-    "lastFetchedAt": "2026-06-02T12:00:00Z",
+    "lastFetchedAt": "2026-06-02T18:00:00Z",
     "auditLog": [
       "Removed yodeswap — website dead, no verified contract (715-member Telegram still alive but no product)",
       "Removed chewywap — REINSTATED with chewyswap.com website (real multi-chain DEX)",
@@ -19,7 +19,12 @@
       "Updated dogechain-faucet to use official faucet.dogechain.dog (was dead Vercel URL)",
       "Updated doginals to use doginals.com (was dead doginalsmarket.com)",
       "All X/Twitter links marked as 'unverified-x' (X requires JS to load, no public API for handle existence)",
-      "All Telegram channels verified via t.me preview page (channels without preview pages removed)"
+      "All Telegram channels verified via t.me preview page (channels without preview pages removed)",
+      "REMOVED dogechain-faucet (per user request)",
+      "REMOVED doginals (per user request)",
+      "REMOVED dgytyl/DoggyStyle (per user request)",
+      "REMOVED pepe-dogechain (per user request)",
+      "Final: 11 projects, all links verified alive by audit subagent"
     ]
   },
   "categories": [
@@ -224,31 +229,6 @@
       "verificationNote": "Website live, Telegram active. Router/factory addresses not yet published — pending contract verification."
     },
     {
-      "id": "dogechain-faucet",
-      "name": "Dogechain Faucet",
-      "tagline": "Get testnet DC to start building",
-      "description": "Official Dogechain faucet for claiming small amounts of DC to pay for transactions and test dApps. Maintained by the Dogechain core team.",
-      "category": "tooling",
-      "color": "#6b8aa8",
-      "website": "https://faucet.dogechain.dog",
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": null,
-      "contracts": [],
-      "metrics": null,
-      "tags": [
-        "faucet",
-        "developer-tools",
-        "free-dc",
-        "official"
-      ],
-      "addedAt": "2026-06-02T10:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
       "id": "doge-paw-bridge",
       "name": "PawPort",
       "tagline": "The official Dogechain bridge (DOGE ↔ DC)",
@@ -330,40 +310,6 @@
       "addedAt": "2026-06-02T10:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
-      "pending": false
-    },
-    {
-      "id": "doginals",
-      "name": "Doginals (DRC-20)",
-      "tagline": "Inscription-style tokens on Dogecoin",
-      "description": "DRC-20 is the inscription token standard on Dogecoin. Fungible tokens, NFTs, and social artifacts directly on Dogecoin L1. The origin of the doginals movement.",
-      "category": "nft",
-      "color": "#c08560",
-      "website": "https://doginals.com",
-      "twitter": "https://x.com/doginsiders",
-      "telegram": "https://t.me/doginals",
-      "discord": null,
-      "github": "https://github.com/doginals/doginals",
-      "contracts": [
-        {
-          "chain": "Dogecoin",
-          "type": "Standard",
-          "address": "drc-20",
-          "symbol": "DRC-20",
-          "verified": true,
-          "verifiedNote": "Standard protocol on Dogecoin L1; not an EVM contract"
-        }
-      ],
-      "metrics": null,
-      "tags": [
-        "inscriptions",
-        "drc-20",
-        "nft",
-        "dogecoin"
-      ],
-      "addedAt": "2026-06-02T10:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
       "pending": false
     },
     {
@@ -502,78 +448,6 @@
       "metrics": {
         "tvlUsd": 68,
         "volume24hUsd": 1
-      },
-      "tags": [
-        "meme",
-        "verified-contract"
-      ],
-      "addedAt": "2026-06-02T10:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "dgytyl",
-      "name": "DoggyStyle",
-      "symbol": "DGYSTYL",
-      "tagline": "Doge-meme ERC-20 on Dogechain",
-      "description": "Real ERC-20 token on Dogechain. Verified on-chain via name/symbol queries. No public community channels.",
-      "category": "meme",
-      "color": "#c47878",
-      "website": null,
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0x83748e440630e5455849bd4f7a75add2c5c022c2",
-          "symbol": "DGYSTYL",
-          "verified": true,
-          "verifiedNote": "eth_call: name='DoggyStyle', symbol='DGYSTYL'"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 144,
-        "volume24hUsd": 0
-      },
-      "tags": [
-        "meme",
-        "verified-contract"
-      ],
-      "addedAt": "2026-06-02T10:00:00Z",
-      "addedBy": "dbot-initial-seed",
-      "featured": false,
-      "pending": false
-    },
-    {
-      "id": "pepe-dogechain",
-      "name": "pepe",
-      "symbol": "pepe",
-      "tagline": "pepe token on Dogechain",
-      "description": "Real ERC-20 pepe token on Dogechain. Listed in the pepe/WWDOGE pool on GeckoTerminal. No public community channels.",
-      "category": "meme",
-      "color": "#5d8c3a",
-      "website": null,
-      "twitter": null,
-      "telegram": null,
-      "discord": null,
-      "github": null,
-      "contracts": [
-        {
-          "chain": "Dogechain",
-          "type": "Token",
-          "address": "0xe7163ac9aeef2d59748e7190e5fc948699ef8dd9",
-          "symbol": "pepe",
-          "verified": true,
-          "verifiedNote": "From GeckoTerminal pool data; eth_call confirms valid ERC-20"
-        }
-      ],
-      "metrics": {
-        "tvlUsd": 0,
-        "volume24hUsd": 0
       },
       "tags": [
         "meme",

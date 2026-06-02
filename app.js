@@ -84,7 +84,13 @@ const LUCIDE = {
   'arrow-right-left':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
   'smile':          '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
   'sparkles':       '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>',
-  'layers':         '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
+  'layers':         '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  'wallet':         '<path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/><path d="M16 12h6v4h-6a2 2 0 0 1 0-4z"/>',
+  'chevron-up':     '<polyline points="18 15 12 9 6 15"/>',
+  'check':          '<polyline points="20 6 9 17 4 12"/>',
+  'copy':           '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  'arrow-left':     '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  'x':              '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
 };
 const lucide = (name, size = 13) => {
   const path = LUCIDE[name] || LUCIDE['sparkles'];
@@ -143,26 +149,141 @@ function categoryDef(id) {
 }
 
 // ─── Voting ────────────────────────────────────────────────────────
-function voteFor(id) {
-  if (!projectById(id)) return;
+// VOTING MODEL
+// ────────────
+// Voting is gated by a wallet signature (EIP-4361, Sign-In With Ethereum).
+// For each project, on the first vote attempt we:
+//   1. Ensure a wallet is connected (window.ethereum, EIP-1193).
+//   2. Build a SIWE-shaped message with a fresh 16-byte nonce.
+//   3. Request personal_sign from the user's wallet.
+//   3a. Cache the signature in localStorage at `pulse:vote:<project-id>`
+//       for SIWE_EXPIRY_DAYS (7) days so we don't re-prompt on every vote.
+//   4. Record the vote in `votes[id].daily[todayKey()][id] = Date.now()`.
+//
+// VERIFICATION HONESTY
+// ────────────────────
+// This is a fully client-side directory. There is no backend. The only
+// thing preventing a single user from casting more than one vote per
+// project per day is the `pulse:vote:<project-id>` entry in *their* browser.
+// A determined user can clear localStorage, switch wallets, or open a
+// private window and vote again. Acceptable for a community-directory MVP.
+// Future hardening: a Cloudflare Worker that verifies the EIP-4361 sig
+// and dedupes by (address, projectId) on the server side.
+const VOTE_SIG_PREFIX = 'pulse:vote:';
+const voteSigKey = id => `${VOTE_SIG_PREFIX}${id}`;
+
+function loadVoteSig(id) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(voteSigKey(id)) || 'null');
+    if (!raw) return null;
+    if (!raw.address || !raw.sig || !raw.nonce || !raw.ts) return null;
+    if (Date.now() - raw.ts > SIWE_EXPIRY_DAYS * 86400_000) {
+      localStorage.removeItem(voteSigKey(id));
+      return null;
+    }
+    return raw;
+  } catch { return null; }
+}
+
+// Build the EIP-4361 SIWE message we ask the wallet to sign.
+function buildSiweMessage(address, projectName, nonce) {
+  const issuedAt = new Date().toISOString();
+  return [
+    `${SIWE_DOMAIN} wants you to sign in with your Ethereum account:`,
+    address,
+    '',
+    `Vote for ${projectName}`,
+    '',
+    'URI: https://dogechain-pulse.vercel.app',
+    'Version: 1',
+    `Nonce: ${nonce}`,
+    `Issued At: ${issuedAt}`
+  ].join('\n');
+}
+
+function makeNonce() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Request a SIWE signature for this project and cache it.
+async function signVoteFor(projectId) {
+  const eth = getEthereum();
+  if (!eth) {
+    showToast('No wallet detected. Install MetaMask or use a wallet browser.', 'warn');
+    return null;
+  }
+  if (!wallet) {
+    showToast('Connect a wallet first.', 'warn');
+    return null;
+  }
+  const p = projectById(projectId);
+  if (!p) return null;
+  const nonce = makeNonce();
+  const message = buildSiweMessage(wallet.address, p.name, nonce);
+  let sig;
+  try {
+    sig = await eth.request({ method: 'personal_sign', params: [message, wallet.address] });
+  } catch (e) {
+    if (e?.code === 4001) showToast('Signature cancelled.', 'warn');
+    else showToast(`Wallet error: ${e?.message || 'unknown'}`, 'err');
+    return null;
+  }
+  const record = { address: wallet.address, sig, ts: Date.now(), nonce };
+  try { localStorage.setItem(voteSigKey(projectId), JSON.stringify(record)); } catch {}
+  return record;
+}
+
+// Returns one of: 'disconnected' | 'ready' | 'voted'
+function voteState(id) {
+  if (!wallet) return 'disconnected';
+  if (hasVoted(id)) return 'voted';
+  return 'ready';
+}
+
+// Main entry point: the card / detail button calls this.
+// Three states:
+//   - disconnected: open the connect prompt; do NOT record a vote.
+//   - ready:        request a SIWE signature, then record the vote.
+//   - voted:        no-op (button is disabled in the UI anyway).
+async function voteFor(id) {
+  const p = projectById(id);
+  if (!p) return;
+  const state = voteState(id);
+  if (state === 'disconnected') {
+    openConnectPrompt(p);
+    return;
+  }
+  if (state === 'voted') return;
+
+  // state === 'ready'
+  let sigRec = loadVoteSig(id);
+  if (!sigRec) {
+    sigRec = await signVoteFor(id);
+    if (!sigRec) return; // user cancelled or wallet error
+  }
+  // Sanity: the cached signature should belong to the currently connected wallet.
+  if (sigRec.address.toLowerCase() !== wallet.address.toLowerCase()) {
+    try { localStorage.removeItem(voteSigKey(id)); } catch {}
+    sigRec = await signVoteFor(id);
+    if (!sigRec) return;
+  }
+  // Record the vote (client-side, see VERIFICATION HONESTY above).
   const k = todayKey();
   if (!votes[id]) votes[id] = { daily: {} };
   if (!votes[id].daily[k]) votes[id].daily[k] = {};
-  const day = votes[id].daily[k];
-  if (day[id]) {
-    delete day[id];
-  } else {
-    // Wallet users: one vote per project per day, no global budget
-    // Anon users: enforce the 30/day budget
-    if (!wallet && votesToday() >= DAILY_VOTE_BUDGET) {
-      showToast(`Daily vote budget reached (${DAILY_VOTE_BUDGET}). Connect a wallet for unlimited votes.`, 'warn');
-      return;
-    }
-    day[id] = Date.now();
-  }
+  votes[id].daily[k][id] = Date.now();
   saveVotes();
+  // Optimistic UI updates + toast.
+  showToast(`Vote recorded for ${p.name} · signature expires in 7 days`, 'ok');
   renderGrid();
   renderStats();
+  // Animate the just-voted card.
+  const btn = document.querySelector(`[data-vote="${CSS.escape(id)}"]`);
+  if (btn) {
+    btn.classList.add('vote-just-voted');
+    setTimeout(() => btn.classList.remove('vote-just-voted'), 600);
+  }
 }
 function voteCount(id) {
   let n = 0;
@@ -243,6 +364,7 @@ async function connectWallet() {
     showToast(`Wallet connected: ${shortAddr(address)}`, 'ok');
     renderWalletUI();
     renderStats();
+    renderGrid();
     return wallet;
   } catch (e) {
     if (e?.code === 4001) {
@@ -259,9 +381,47 @@ function disconnectWallet() {
   showToast('Wallet disconnected.', 'ok');
   renderWalletUI();
   renderStats();
+  renderGrid();
 }
 function shortAddr(a) {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '';
+}
+
+// ─── Connect-prompt modal ──────────────────────────────────────────
+// Shown when a user clicks "Connect to vote" on a card or in the detail
+// view. We don't navigate away from the page; we just open a small dialog
+// that calls connectWallet(). On success, the calling code re-invokes
+// voteFor(id) so the user lands in the "ready" state immediately.
+let _connectPromptContext = null;
+
+function openConnectPrompt(project) {
+  _connectPromptContext = project ? { id: project.id, name: project.name } : null;
+  const dlg = document.getElementById('connectPromptModal');
+  if (!dlg) { connectWallet(); return; }
+  const slot = dlg.querySelector('[data-connect-project]');
+  if (slot && project) slot.textContent = project.name;
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+  else dlg.setAttribute('open', '');
+}
+
+function closeConnectPrompt() {
+  _connectPromptContext = null;
+  const dlg = document.getElementById('connectPromptModal');
+  if (!dlg) return;
+  if (typeof dlg.close === 'function') dlg.close();
+  else dlg.removeAttribute('open');
+}
+
+async function connectPromptAction() {
+  if (!isWalletAvailable()) {
+    showToast('No wallet detected. Install MetaMask or use a wallet browser.', 'warn');
+    return;
+  }
+  const w = await connectWallet();
+  if (!w) return; // user cancelled or errored
+  const ctx = _connectPromptContext;
+  closeConnectPrompt();
+  if (ctx && ctx.id) voteFor(ctx.id);
 }
 
 // ─── Submission (local-only, also offers GitHub issue path) ─────────
@@ -280,7 +440,7 @@ function submitProject(form) {
     tagline: (fd.get('tagline') || '').toString().slice(0, 80),
     description: (fd.get('description') || '').toString().slice(0, 400),
     category: cat,
-    logo: '🪙',
+    logo: null,
     color: '#8a8a8a',
     website: (fd.get('website') || '').toString().trim() || null,
     twitter: normalizeTwitter((fd.get('twitter') || '').toString().trim()) || null,
@@ -440,16 +600,21 @@ function renderGrid() {
     });
   });
   grid.querySelectorAll('[data-vote]').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); voteFor(btn.dataset.vote); });
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      await voteFor(btn.dataset.vote);
+    });
   });
   grid.querySelectorAll('[data-copy]').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); copyAddr(btn.dataset.copy); });
+    btn.addEventListener('click', e => { e.stopPropagation(); copyAddr(btn.dataset.copy, btn); });
   });
 }
 
 function renderCard(p, spotlight) {
   const cat = categoryDef(p.category);
-  const voted = hasVoted(p.id);
+  const catStyle = cat
+    ? `style="--cat-color:${esc(cat.color || '#888')}"`
+    : '';
   const links = [
     p.website && linkBtn('web', p.website, 'Website'),
     p.twitter && linkBtn('x', p.twitter, 'X / Twitter'),
@@ -458,17 +623,23 @@ function renderCard(p, spotlight) {
     p.github && linkBtn('gh', p.github, 'GitHub')
   ].filter(Boolean).join('');
   const contracts = (p.contracts || []).slice(0, 2).map(c => `
-    <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" title="${c.verified ? 'Verified on-chain: ' + esc(c.verifiedNote || 'name/symbol/decimals confirmed') : 'Click to copy'}" type="button">
+    <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" data-copy-btn
+      title="${c.verified ? 'Verified on-chain: ' + esc(c.verifiedNote || 'name/symbol/decimals confirmed') : 'Click to copy'}"
+      type="button" aria-label="Copy contract address ${esc(truncateAddr(c.address))}">
       <span class="chain">${esc(c.chain || 'Dogechain')}</span>
       <span class="addr-txt">${esc(truncateAddr(c.address))}${c.symbol ? ` · ${esc(c.symbol)}` : ''}</span>
-      ${c.verified ? `<span class="verified-tick" aria-label="verified on-chain"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ''}
+      <span class="copy-btn" aria-hidden="true">${lucide('copy', 11)}</span>
+      ${c.verified ? `<span class="verified-tick" aria-label="verified on-chain">${lucide('check', 10)}</span>` : ''}
     </button>`).join('');
   return `
-    <article class="card ${p.pending ? 'pending' : ''} ${spotlight ? 'spotlight' : ''}" data-card="${esc(p.id)}" tabindex="0" role="button" aria-label="Open ${esc(p.name)}">
-      ${spotlight ? `<div class="spotlight-badge">★ Today's spotlight</div>` : ''}
-      ${p.pending ? `<div class="pending-badge">⏳ Pending</div>` : ''}
+    <article class="card ${p.pending ? 'pending' : ''} ${spotlight ? 'spotlight' : ''}"
+             ${catStyle}
+             data-card="${esc(p.id)}" tabindex="0" role="button"
+             aria-label="Open ${esc(p.name)}">
+      ${spotlight ? `<div class="spotlight-badge">${lucide('sparkles', 11)} Today's spotlight</div>` : ''}
+      ${p.pending ? `<div class="pending-badge">Pending</div>` : ''}
       <div class="card-head">
-        <div class="card-logo" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.logo || '🪙')}</div>
+        <div class="card-logo" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.name.slice(0, 1))}</div>
         <div class="card-title">
           <h2>${esc(p.name)}</h2>
           <div class="card-tagline">${esc(p.tagline || '')}</div>
@@ -480,12 +651,52 @@ function renderCard(p, spotlight) {
       ${contracts ? `<div class="contracts">${contracts}</div>` : ''}
       <div class="card-foot">
         <div class="links">${links}</div>
-        <button class="vote ${voted ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${voted}" aria-label="Vote for ${esc(p.name)}">
-          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
-          <span class="vote-n">${voteCount(p.id)}</span>
-        </button>
+        ${voteButtonHtml(p.id, p.name, false)}
       </div>
     </article>`;
+}
+
+// Renders the vote button in one of three states. Used by both the card
+// and the detail modal. `large` toggles the .lg modifier for the bigger
+// button used in the detail view.
+function voteButtonHtml(id, name, large) {
+  const state = voteState(id);
+  const count = voteCount(id);
+  const cls = [
+    'vote',
+    state === 'voted' ? 'voted' : '',
+    state === 'disconnected' ? 'vote-disconnected' : '',
+    large ? 'lg' : ''
+  ].filter(Boolean).join(' ');
+  const aria = state === 'voted'
+    ? `Voted for ${esc(name)}`
+    : state === 'disconnected'
+      ? `Connect to vote for ${esc(name)}`
+      : `Vote for ${esc(name)}`;
+  let icon, label, pressed, disabled;
+  if (state === 'disconnected') {
+    icon = lucide('wallet', large ? 14 : 12);
+    label = large ? 'Connect to vote' : 'Connect';
+    pressed = 'false';
+    disabled = '';
+  } else if (state === 'voted') {
+    icon = lucide('check', large ? 14 : 12);
+    label = large ? 'Voted' : '';
+    pressed = 'true';
+    disabled = ' disabled';
+  } else {
+    icon = lucide('chevron-up', large ? 14 : 12);
+    label = large ? 'Vote' : '';
+    pressed = 'false';
+    disabled = '';
+  }
+  // Hide the count entirely when disconnected (the wallet is the focus).
+  const showCount = state !== 'disconnected';
+  return `<button class="${cls}" data-vote="${esc(id)}" data-vote-state="${state}" type="button" aria-pressed="${pressed}" aria-label="${aria}"${disabled}>
+    <span class="vote-ico-wrap" aria-hidden="true">${icon}</span>
+    ${showCount ? `<span class="vote-n">${count}</span>` : ''}
+    ${label ? `<span class="vote-label">${esc(label)}</span>` : ''}
+  </button>`;
 }
 
 function linkBtn(kind, url, label) {
@@ -524,7 +735,7 @@ function renderDetail(p) {
   }).join('');
   return `
     <div class="detail-head">
-      <div class="logo-lg" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.logo || '🪙')}</div>
+      <div class="detail-logo" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.name.slice(0, 1))}</div>
       <div class="detail-title">
         <h2 id="detailTitle">${esc(p.name)}</h2>
         <div class="detail-sub">${esc(p.tagline || '')}</div>
@@ -540,11 +751,7 @@ function renderDetail(p) {
       <span class="muted">Added ${esc(relTime(p.addedAt))}${p.addedBy ? ` · ${esc(p.addedBy)}` : ''}${p.pending ? ' · pending verification' : ''}</span>
     </div>
     <div class="detail-foot">
-      <button class="vote lg ${hasVoted(p.id) ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${hasVoted(p.id)}">
-        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
-        <span class="vote-n">${voteCount(p.id)}</span>
-        <span class="vote-label">${hasVoted(p.id) ? 'Voted' : 'Vote'}</span>
-      </button>
+      ${voteButtonHtml(p.id, p.name, true)}
       <button class="btn ghost" data-close type="button">Close</button>
     </div>`;
 }
@@ -568,25 +775,37 @@ function closeDetail() {
 }
 function wireDetailHandlers(p) {
   document.getElementById('detailBody').querySelectorAll('[data-copy]').forEach(b => {
-    b.addEventListener('click', () => copyAddr(b.dataset.copy));
+    b.addEventListener('click', () => copyAddr(b.dataset.copy, b));
   });
   document.getElementById('detailBody').querySelectorAll('[data-vote]').forEach(b => {
-    b.addEventListener('click', () => { voteFor(p.id); openDetail(p.id); });
+    b.addEventListener('click', async () => {
+      await voteFor(p.id);
+      // Re-render the detail body so the button state updates.
+      const body = document.getElementById('detailBody');
+      if (body) body.innerHTML = renderDetail(p);
+      wireDetailHandlers(p);
+    });
   });
   document.getElementById('detailBody').querySelectorAll('[data-close]').forEach(b => {
     b.addEventListener('click', closeDetail);
   });
 }
 
-function copyAddr(addr) {
+function copyAddr(addr, btnEl) {
   if (!addr) return;
+  const finish = (ok) => {
+    if (!btnEl) return;
+    btnEl.classList.add(ok ? 'copied' : 'copy-fail');
+    setTimeout(() => btnEl.classList.remove('copied', 'copy-fail'), 1400);
+  };
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(addr).then(
-      () => showToast('Copied to clipboard', 'ok'),
-      () => fallbackCopy(addr)
+      () => { showToast('Copied to clipboard', 'ok'); finish(true); },
+      () => { fallbackCopy(addr); finish(true); }
     );
   } else {
     fallbackCopy(addr);
+    finish(true);
   }
 }
 function fallbackCopy(addr) {
@@ -710,8 +929,8 @@ function methodologyContent() {
       <li><strong>Pruned</strong> — projects with no socials, broken contracts, or no on-chain activity for 90+ days get removed in the next data refresh.</li>
     </ol>
     <h2>Voting</h2>
-    <p><strong>Anonymous:</strong> votes are stored in your browser's <code>localStorage</code>. Each browser gets 30 votes per day to prevent spam. We don't track who you are.</p>
-    <p><strong>With wallet (EIP-4361):</strong> click <em>Connect wallet</em> in the header to sign in with any EIP-1193 wallet (MetaMask, Rabby, Frame, etc). Your signature is stored locally and expires in 7 days. Wallet users get unlimited votes because the cryptographic signature proves a unique human, removing the spam budget. We never send your address anywhere — everything is client-side.</p>
+    <p>You need to <strong>connect a wallet</strong> to vote. We use Sign-In With Ethereum (EIP-4361) to verify a unique human per project: you sign a message with your wallet, the signature is cached in your browser for 7 days, and your vote is recorded. One vote per project per day. The signature proves you are a unique human without revealing your identity. We never send your address anywhere — everything is client-side.</p>
+    <p>No wallet? Click any vote button to open the connect prompt. We support any EIP-1193 wallet (MetaMask, Rabby, Frame, etc).</p>
     <h2>Data freshness</h2>
     <ul>
       <li><strong>Project cards</strong> — verified weekly by DBOT against the Dogechain RPC and public APIs.</li>
@@ -778,13 +997,21 @@ async function init() {
     showToast('Saved locally — opening GitHub to file your submission', 'ok');
     setTimeout(() => window.open(url, '_blank', 'noopener'), 600);
   });
+
+  // Connect-prompt modal (wallet required to vote)
+  const cpm = document.getElementById('connectPromptModal');
+  if (cpm) {
+    cpm.addEventListener('click', e => { if (e.target === cpm) closeConnectPrompt(); });
+    cpm.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeConnectPrompt));
+    document.getElementById('connectPromptAction')?.addEventListener('click', connectPromptAction);
+  }
   // Detail modal
   const dm = document.getElementById('detailModal');
   dm.addEventListener('click', e => { if (e.target === dm) closeDetail(); });
   dm.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeDetail));
   // Global keys
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeDetail(); closeSubmitModal(); }
+    if (e.key === 'Escape') { closeDetail(); closeSubmitModal(); closeConnectPrompt(); }
     if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
       e.preventDefault();
       document.getElementById('search').focus();

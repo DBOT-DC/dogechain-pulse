@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Dogechain Pulse — the community-driven discovery hub for projects, communities, and builders on the Dogechain Network. Browse 15 verified projects across DeFi, NFT, Bridge, Meme and more." />
+  <meta name="description" content="Dogechain Pulse — the community-driven discovery hub for projects, communities, and builders on the Dogechain Network. Browse 11 verified projects across DeFi, NFT, Bridge, Meme and more." />
   <meta name="keywords" content="Dogechain, DC, Dogecoin, DeFi, DEX, NFT, bridge, meme, directory, dapp, ecosystem" />
   <meta name="author" content="DBOT Community" />
 
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Dogechain Pulse" />
   <meta property="og:title" content="Dogechain Pulse — Discover the Dogechain Network" />
-  <meta property="og:description" content="Community-driven directory of 15 verified projects on the Dogechain Network. Vote for what matters, submit what's missing." />
+  <meta property="og:description" content="Community-driven directory of 11 verified projects on the Dogechain Network. Vote for what matters, submit what's missing." />
   <meta property="og:url" content="https://dogechain-pulse.vercel.app/" />
   <meta property="og:image" content="https://dogechain-pulse.vercel.app/og-image.png" />
   <meta property="og:image:width" content="1200" />
@@ -42,18 +42,17 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
-  <div class="bg-gradient" aria-hidden="true"></div>
   <div class="app">
     <header class="hero">
       <div>
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 10 10"/><path d="M2 12c0 5.5 4.5 10 10 10"/><circle cx="12" cy="12" r="3"/><circle cx="17" cy="7" r="1.2" fill="currentColor"/></svg>
           </span>
-          <span class="brand-name">Dogechain Pulse</span>
+          <span class="brand-name">DOGECHAIN PULSE</span>
         </div>
         <h1>Discover the Dogechain Network.</h1>
-        <p class="lede">A community-driven directory of projects, protocols, and people building on Dogechain. Vote for what matters, submit what's missing.</p>
+        <p class="lede">A community-driven directory of 11 verified projects on the Dogechain Network. Connect a wallet to vote, submit what's missing, and help surface what matters.</p>
         <div class="hero-cta">
           <button class="btn primary" id="openSubmit" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -151,8 +150,22 @@
   </dialog>
 
   <dialog class="detail" id="detailModal" aria-labelledby="detailTitle">
-    <button class="close-x" type="button" data-close aria-label="Close">×</button>
-    <div id="detailBody"></div>
+    <div id="detailBody">
+      <button class="close-x" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="connectPromptModal" aria-labelledby="connectPromptTitle">
+    <form method="dialog">
+      <header><h2 id="connectPromptTitle">Connect a wallet to vote</h2></header>
+      <p class="muted">Connect a wallet to vote on <strong data-connect-project>this project</strong>. We use Sign-In With Ethereum (EIP-4361). Your signature is stored only in this browser for 7 days and is never sent to a server.</p>
+      <footer>
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="button" class="btn primary" id="connectPromptAction">Connect Wallet</button>
+      </footer>
+    </form>
   </dialog>
 
   <script src="./app.js"></script>
