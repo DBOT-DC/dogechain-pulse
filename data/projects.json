@@ -253,11 +253,11 @@
       "contracts": [
         {
           "chain": "Dogechain",
-          "type": "Token",
+          "type": "Bridge Asset",
           "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
           "symbol": "WWDOGE",
           "verified": true,
-          "verifiedNote": "Bridge asset — same address as the verified WWDOGE token"
+          "verifiedNote": "Canonical bridge asset on Dogechain (WWDOGE); the bridge contract itself is off-chain at dive.dogechain.dog"
         }
       ],
       "metrics": null,
