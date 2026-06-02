@@ -16,11 +16,25 @@
  * site uses relative URLs as usual.
  */
 (function () {
-  // Heuristic: if the URL path contains "/dogechain-pulse/" anywhere after
-  // the host, use it as the base prefix. Otherwise use "./" (apex).
   var path = location.pathname || '/';
-  var m = path.match(/^(\/[^\/?#]+\/)/); // first segment, e.g. "/dogechain-pulse/"
-  var baseHref = m ? m[1] : './';
+
+  // Heuristic: if the URL path is anything other than the apex ("/"), treat
+  // the first path segment as a deployment subpath and set the base to it
+  // (with a trailing slash). Otherwise default to relative "./" for the apex.
+  //
+  // Examples:
+  //   "/"                  → "./"                       (standalone apex)
+  //   "/dogechain-pulse"   → "/dogechain-pulse/"        (path prefix)
+  //   "/dogechain-pulse/"  → "/dogechain-pulse/"        (path prefix w/ slash)
+  //   "/foo/bar"           → "/foo/"                    (deep path — first segment is the deploy root)
+  var segments = path.replace(/^\/+/, '').split('/').filter(Boolean);
+  var baseHref;
+  if (segments.length === 0) {
+    baseHref = './';
+  } else {
+    baseHref = '/' + segments[0] + '/';
+  }
+
   var b = document.createElement('base');
   b.href = baseHref;
   document.head.appendChild(b);
