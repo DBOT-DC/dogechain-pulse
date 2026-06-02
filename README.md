@@ -8,6 +8,12 @@ A community-driven, open-source directory of projects, protocols, and people bui
 📦 **Data API:** [`data/projects.json`](./data/projects.json) — free, public, versioned
 💻 **Source:** [github.com/DBOT-DC/dogechain-pulse](https://github.com/DBOT-DC/dogechain-pulse)
 
+### 🚀 Deploy your own (one click)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/DBOT-DC/dogechain-pulse&project-name=dogechain-pulse)
+
+One click. ~30 seconds. After that, every push to `main` auto-deploys.
+
 ---
 
 ## Why this exists
