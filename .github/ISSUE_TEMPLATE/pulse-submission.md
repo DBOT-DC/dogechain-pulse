@@ -8,20 +8,29 @@ assignees: ''
 
 # Project submission for Dogechain Pulse
 
-**Name:** <!-- project name -->
+**Name:**
+<!-- project name (min 2 chars) -->
 
-**Tagline:** <!-- one-line, < 80 chars -->
+**Tagline:**
+<!-- one-line, max 80 chars -->
 
-**Description:** <!-- 1-3 sentences, factual -->
+**Description:**
+<!-- 1-3 sentences, factual, max 400 chars -->
 
-**Category:** <!-- defi | nft | gaming | social | infra | tooling | bridge | meme -->
+**Category:**
+<!-- one of: defi | nft | gaming | social | infra | tooling | bridge | meme -->
 
-**Website:** <!-- https://... -->
+**Website:**
+<!-- https://... (optional) -->
 
-**X / Twitter:** <!-- @handle or full URL -->
+**X / Twitter:**
+<!-- @handle or full URL (optional) -->
 
-**Telegram:** <!-- t.me/... -->
+**Telegram:**
+<!-- t.me/... (optional) -->
 
-**Contract (Dogechain, optional):** <!-- 0x... 40 hex -->
+**Contract (Dogechain, optional):**
+<!-- 0x followed by 40 hex chars. The bot will verify it's a real ERC-20. -->
 
-**Submitted by:** <!-- your name/handle -->
+**Submitted by:**
+<!-- your name/handle (optional, defaults to anonymous) -->

@@ -1,0 +1,10 @@
+name = "pulse-submission-bot"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# Secrets (set with `wrangler secret put`):
+#   GITHUB_TOKEN  - fine-grained PAT, repo scope on DBOT-DC/dogechain-pulse
+#   WEBHOOK_SECRET - optional, for HMAC signature verification
+
+[observability]
+enabled = true

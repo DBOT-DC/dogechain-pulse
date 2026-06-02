@@ -1,0 +1,9 @@
+{
+  "action": "opened",
+  "issue": {
+    "number": 999,
+    "title": "[Pulse] Submit: Test Project",
+    "body": "**Name:** Test Project\n**Tagline:** A test submission for the bot\n**Category:** meme\n**Website:** https://example.com\n**X / Twitter:** @testproject\n**Telegram:** https://t.me/test\n**Contract:** 0x0000000000000000000000000000000000000000\n**Submitted by:** testuser",
+    "labels": [{"name": "pulse-submission"}]
+  }
+}
