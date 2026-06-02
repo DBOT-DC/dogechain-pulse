@@ -1,0 +1,8 @@
+{
+  "_comment": "Drop this into the www.dbot.dog Vercel project's vercel.json. It rewrites /dogechain-pulse/* to the dogechain-pulse.vercel.app project, so the canonical URL is www.dbot.dog/dogechain-pulse/ while the actual site lives in its own Vercel project (auto-deployed from GitHub). No DNS, no SSL, no separate domain. To add more DBOT projects, append more entries to the rewrites array.",
+
+  "rewrites": [
+    { "source": "/dogechain-pulse",      "destination": "https://dogechain-pulse.vercel.app" },
+    { "source": "/dogechain-pulse/:path*", "destination": "https://dogechain-pulse.vercel.app/:path*" }
+  ]
+}

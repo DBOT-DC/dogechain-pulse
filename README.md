@@ -4,9 +4,23 @@
 
 A community-driven, open-source directory of projects, protocols, and people building on the [Dogechain Network](https://dogechain.dog) (chain ID 2000). No accounts. No server. No gatekeepers.
 
-🌐 **Live:** **[dogechain-pulse.vercel.app](https://dogechain-pulse.vercel.app)** ← deployed and live
+🌐 **Live (canonical):** **[www.dbot.dog/dogechain-pulse/](https://www.dbot.dog/dogechain-pulse/)** ← deployed and live
+🌐 **Standalone:** [dogechain-pulse.vercel.app](https://dogechain-pulse.vercel.app) ← same code, alternate origin
 📦 **Data API:** [`data/projects.json`](./data/projects.json) — free, public, versioned
 💻 **Source:** [github.com/DBOT-DC/dogechain-pulse](https://github.com/DBOT-DC/dogechain-pulse)
+
+### Deployment modes (one codebase, two URLs)
+
+The same code runs in two modes:
+
+| Mode | URL | When to use |
+|---|---|---|
+| **Canonical (path prefix)** | `https://www.dbot.dog/dogechain-pulse/` | This is the official URL. Set up via a Vercel rewrite on the `www.dbot.dog` project (see `vercel-rewrite.json` for the exact config). |
+| **Standalone (apex)** | `https://dogechain-pulse.vercel.app/` | The Vercel-hosted apex. Always-on, no DNS required. Useful for forks, demos, and the auto-deploy preview. |
+
+The site auto-detects which mode it's in via `base-href.js` and sets the `<base>` tag accordingly. All relative URLs (CSS, JS, icon, `fetch('./data/projects.json')`) resolve correctly in both modes — no rebuild needed.
+
+Future DBOT projects follow the same pattern: `www.dbot.dog/<project-slug>/` for canonical, `<project-slug>.vercel.app` for standalone.
 
 ### 🚀 Deploy your own (one click)
 
