@@ -9,12 +9,16 @@
 const DATA_URL = './data/projects.json';
 const VOTE_KEY = 'pulse:votes:v1';
 const SUBMIT_KEY = 'pulse:submissions:v1';
+const WALLET_KEY = 'pulse:wallet:v1';
 const DAILY_VOTE_BUDGET = 30;
 const REFRESH_BLOCK_MS = 30_000;
+const SIWE_DOMAIN = (typeof location !== 'undefined' ? location.host : 'pulse.dogechain.dog');
+const SIWE_EXPIRY_DAYS = 7;
 
 let data = null;
 let votes = loadVotes();
 let submissions = loadSubmissions();
+let wallet = loadWallet();
 let activeCategory = 'all';
 let searchQuery = '';
 let sortBy = 'votes';
@@ -32,6 +36,24 @@ function loadSubmissions() {
 }
 function saveSubmissions() {
   try { localStorage.setItem(SUBMIT_KEY, JSON.stringify(submissions)); } catch {}
+}
+function loadWallet() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
+    if (!raw) return null;
+    // Check expiry
+    if (raw.expiresAt && raw.expiresAt < Date.now()) {
+      localStorage.removeItem(WALLET_KEY);
+      return null;
+    }
+    return raw;
+  } catch { return null; }
+}
+function saveWallet(w) {
+  try {
+    if (w) localStorage.setItem(WALLET_KEY, JSON.stringify(w));
+    else localStorage.removeItem(WALLET_KEY);
+  } catch {}
 }
 
 // ─── Time / format helpers ─────────────────────────────────────────
@@ -113,8 +135,10 @@ function voteFor(id) {
   if (day[id]) {
     delete day[id];
   } else {
-    if (votesToday() >= DAILY_VOTE_BUDGET) {
-      showToast(`Daily vote budget reached (${DAILY_VOTE_BUDGET})`, 'warn');
+    // Wallet users: one vote per project per day, no global budget
+    // Anon users: enforce the 30/day budget
+    if (!wallet && votesToday() >= DAILY_VOTE_BUDGET) {
+      showToast(`Daily vote budget reached (${DAILY_VOTE_BUDGET}). Connect a wallet for unlimited votes.`, 'warn');
       return;
     }
     day[id] = Date.now();
@@ -133,6 +157,94 @@ function voteCount(id) {
 function hasVoted(id) {
   const k = todayKey();
   return !!(votes[id]?.daily?.[k]?.[id]);
+}
+
+// ─── Wallet (EIP-4361 Sign-In With Ethereum) ──────────────────────
+// Opt-in power-user feature: connect a wallet to remove the daily vote budget.
+// One address = one vote per project per day. Sig stored locally, expires in 7 days.
+function getEthereum() {
+  if (typeof window === 'undefined') return null;
+  return window.ethereum || null;
+}
+function isWalletAvailable() {
+  const eth = getEthereum();
+  return !!(eth && typeof eth.request === 'function');
+}
+async function connectWallet() {
+  const eth = getEthereum();
+  if (!eth) {
+    showToast('No wallet detected. Install MetaMask, Rabby, or any EIP-1193 wallet.', 'warn');
+    return null;
+  }
+  try {
+    // 1. Request accounts (triggers wallet popup)
+    const accounts = await eth.request({ method: 'eth_requestAccounts' });
+    if (!accounts || !accounts.length) {
+      showToast('Wallet connection cancelled.', 'warn');
+      return null;
+    }
+    const address = accounts[0];
+    // 2. Get chain ID (informational; we don't enforce Dogechain)
+    let chainId = null;
+    try {
+      chainId = await eth.request({ method: 'eth_chainId' });
+    } catch {}
+    // 3. Build SIWE message
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    const issuedAt = new Date().toISOString();
+    const expiryTime = new Date(Date.now() + SIWE_EXPIRY_DAYS * 86400_000).toISOString();
+    const message = [
+      `${SIWE_DOMAIN} wants you to sign in with your Ethereum account:`,
+      address,
+      '',
+      'Sign in to Dogechain Pulse to vote on projects without daily limits.',
+      '',
+      `URI: https://${SIWE_DOMAIN}/`,
+      `Version: 1`,
+      `Nonce: ${nonce}`,
+      `Issued At: ${issuedAt}`,
+      `Expiration Time: ${expiryTime}`,
+      `Chain ID: ${chainId || '0'}`
+    ].join('\n');
+    // 4. Request signature
+    const signature = await eth.request({
+      method: 'personal_sign',
+      params: [message, address]
+    });
+    // 5. Persist
+    wallet = {
+      address,
+      chainId,
+      signature,
+      message,
+      nonce,
+      issuedAt,
+      expiresAt: Date.now() + SIWE_EXPIRY_DAYS * 86400_000
+    };
+    saveWallet(wallet);
+    showToast(`Wallet connected: ${shortAddr(address)}`, 'ok');
+    renderWalletUI();
+    renderStats();
+    return wallet;
+  } catch (e) {
+    if (e?.code === 4001) {
+      showToast('Wallet connection cancelled.', 'warn');
+    } else {
+      showToast(`Wallet error: ${e?.message || 'unknown'}`, 'err');
+    }
+    return null;
+  }
+}
+function disconnectWallet() {
+  wallet = null;
+  saveWallet(null);
+  showToast('Wallet disconnected.', 'ok');
+  renderWalletUI();
+  renderStats();
+}
+function shortAddr(a) {
+  return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '';
 }
 
 // ─── Submission (local-only, also offers GitHub issue path) ─────────
@@ -201,16 +313,18 @@ function renderStats() {
   const cats = new Set(projects.map(p => p.category).filter(Boolean));
   const tvl = projects.reduce((s, p) => s + (p.metrics?.tvlUsd || 0), 0);
   const totalVotes = projects.reduce((s, p) => s + voteCount(p.id), 0);
+  const budgetLabel = wallet ? `${shortAddr(wallet.address)}` : `${fmtNum(remainingVotes())}`;
+  const budgetKey = wallet ? 'connected-wallet' : 'daily-votes-left';
   const stats = [
     { label: 'Projects listed', value: fmtNum(projects.length) },
     { label: 'Categories', value: fmtNum(cats.size) },
     { label: 'Total DeFi TVL', value: fmtUsd(tvl) },
     { label: 'Community votes', value: fmtNum(totalVotes) },
-    { label: 'Daily votes left', value: fmtNum(remainingVotes()) }
+    { label: wallet ? 'Voting as' : 'Daily votes left', value: budgetLabel, key: budgetKey, isWallet: !!wallet }
   ];
   bar.innerHTML = stats.map(s => `
-    <div class="stat">
-      <div class="stat-value" data-stat="${s.label.toLowerCase().replace(/[^a-z]+/g, '-')}">${esc(s.value)}</div>
+    <div class="stat ${s.isWallet ? 'stat-wallet' : ''}">
+      <div class="stat-value" data-stat="${esc(s.label.toLowerCase().replace(/[^a-z]+/g, '-'))}">${esc(s.value)}</div>
       <div class="stat-label">${esc(s.label)}</div>
     </div>
   `).join('') + `<div class="stat" id="blockStat">
@@ -218,6 +332,24 @@ function renderStats() {
       <div class="stat-label">Latest block</div>
     </div>`;
   refreshBlock();
+}
+
+// ─── Render: wallet UI ────────────────────────────────────────────
+function renderWalletUI() {
+  const btn = document.getElementById('walletBtn');
+  if (!btn) return;
+  if (wallet) {
+    btn.className = 'btn wallet connected';
+    btn.innerHTML = `<span class="wallet-dot" aria-hidden="true"></span><span class="wallet-addr">${esc(shortAddr(wallet.address))}</span>`;
+    btn.title = `Connected: ${wallet.address}\nClick to disconnect`;
+    btn.onclick = () => { if (confirm('Disconnect wallet?')) disconnectWallet(); };
+  } else {
+    btn.className = 'btn ghost wallet';
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-1"/><path d="M16 12h6v4h-6a2 2 0 0 1 0-4z"/></svg><span>${isWalletAvailable() ? 'Connect wallet' : 'No wallet'}</span>`;
+    btn.title = isWalletAvailable() ? 'Sign in with your Ethereum wallet (EIP-4361) for unlimited voting' : 'No EIP-1193 wallet detected';
+    btn.onclick = isWalletAvailable() ? connectWallet : null;
+    if (!isWalletAvailable()) btn.disabled = true;
+  }
 }
 
 // ─── Render: category chips ────────────────────────────────────────
@@ -560,7 +692,8 @@ function methodologyContent() {
       <li><strong>Pruned</strong> — projects with no socials, broken contracts, or no on-chain activity for 90+ days get removed in the next data refresh.</li>
     </ol>
     <h2>Voting</h2>
-    <p>Votes are stored in your browser's <code>localStorage</code>. Each browser gets 30 votes per day to prevent spam. We don't track who you are. We're exploring wallet-signed voting in v1.5 to remove the daily budget.</p>
+    <p><strong>Anonymous:</strong> votes are stored in your browser's <code>localStorage</code>. Each browser gets 30 votes per day to prevent spam. We don't track who you are.</p>
+    <p><strong>With wallet (EIP-4361):</strong> click <em>Connect wallet</em> in the header to sign in with any EIP-1193 wallet (MetaMask, Rabby, Frame, etc). Your signature is stored locally and expires in 7 days. Wallet users get unlimited votes because the cryptographic signature proves a unique human, removing the spam budget. We never send your address anywhere — everything is client-side.</p>
     <h2>Data freshness</h2>
     <ul>
       <li><strong>Project cards</strong> — verified weekly by DBOT against the Dogechain RPC and public APIs.</li>
@@ -590,6 +723,20 @@ function statsContent() {
 async function init() {
   // Wire static-event listeners first so we can show errors
   document.getElementById('openSubmit').addEventListener('click', openSubmitModal);
+  renderWalletUI();
+  // Listen for wallet account changes
+  if (getEthereum()) {
+    try {
+      getEthereum().on?.('accountsChanged', (accounts) => {
+        if (!accounts || !accounts.length) disconnectWallet();
+        else if (wallet && accounts[0].toLowerCase() !== wallet.address.toLowerCase()) {
+          disconnectWallet();
+          connectWallet();
+        }
+      });
+      getEthereum().on?.('chainChanged', () => { renderWalletUI(); });
+    } catch {}
+  }
   document.getElementById('search').addEventListener('input', debounce(e => {
     searchQuery = e.target.value.trim();
     renderGrid();

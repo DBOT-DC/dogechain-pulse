@@ -548,3 +548,38 @@ dialog.detail {
   border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
   margin-left: 6px;
 }
+
+/* ─── Wallet UI ──────────────────────────────────────────────────── */
+.btn.wallet {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 13px;
+}
+.btn.wallet .wallet-dot {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in srgb, var(--good) 10%, transparent); }
+}
+.btn.wallet.connected {
+  background: color-mix(in srgb, var(--good) 14%, var(--bg-3));
+  border-color: var(--good);
+  color: var(--good);
+}
+.btn.wallet.connected:hover {
+  background: color-mix(in srgb, var(--good) 22%, var(--bg-3));
+}
+.btn.wallet:disabled { opacity: 0.5; cursor: not-allowed; }
+.stat.stat-wallet {
+  background: color-mix(in srgb, var(--good) 10%, var(--bg-2));
+  border-color: color-mix(in srgb, var(--good) 40%, var(--line));
+}
+.stat.stat-wallet .stat-value {
+  color: var(--good);
+  font-size: 14px;
+  font-family: var(--mono);
+}
