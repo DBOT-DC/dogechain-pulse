@@ -8,14 +8,54 @@
     "lastFetchedAt": "2026-06-02T00:00:00Z"
   },
   "categories": [
-    { "id": "defi",    "label": "DeFi",    "icon": "💱", "color": "#7c9a82" },
-    { "id": "nft",     "label": "NFT",     "icon": "🖼", "color": "#c08560" },
-    { "id": "gaming",  "label": "Gaming",  "icon": "🎮", "color": "#9b8ec4" },
-    { "id": "social",  "label": "Social",  "icon": "💬", "color": "#c4a86b" },
-    { "id": "infra",   "label": "Infra",   "icon": "🛠", "color": "#6b8aa8" },
-    { "id": "tooling", "label": "Tooling", "icon": "🧰", "color": "#b87a8a" },
-    { "id": "bridge",  "label": "Bridge",  "icon": "🌉", "color": "#8a9bb8" },
-    { "id": "meme",    "label": "Meme",    "icon": "🐸", "color": "#c47878" }
+    {
+      "id": "defi",
+      "label": "DeFi",
+      "icon": "💱",
+      "color": "#7c9a82"
+    },
+    {
+      "id": "nft",
+      "label": "NFT",
+      "icon": "🖼",
+      "color": "#c08560"
+    },
+    {
+      "id": "gaming",
+      "label": "Gaming",
+      "icon": "🎮",
+      "color": "#9b8ec4"
+    },
+    {
+      "id": "social",
+      "label": "Social",
+      "icon": "💬",
+      "color": "#c4a86b"
+    },
+    {
+      "id": "infra",
+      "label": "Infra",
+      "icon": "🛠",
+      "color": "#6b8aa8"
+    },
+    {
+      "id": "tooling",
+      "label": "Tooling",
+      "icon": "🧰",
+      "color": "#b87a8a"
+    },
+    {
+      "id": "bridge",
+      "label": "Bridge",
+      "icon": "🌉",
+      "color": "#8a9bb8"
+    },
+    {
+      "id": "meme",
+      "label": "Meme",
+      "icon": "🐸",
+      "color": "#c47878"
+    }
   ],
   "projects": [
     {
@@ -32,11 +72,29 @@
       "discord": null,
       "github": "https://github.com/omnomswap",
       "contracts": [
-        { "chain": "Dogechain", "type": "Router", "address": "0x4aE2bD0666c76C7f39311b9B3e39b53C8D7C43Ea", "symbol": "" },
-        { "chain": "Dogechain", "type": "Token",  "address": "0xD0aA21244dc06D29d22D8D43d9D7c7Fb6e6c6F6d", "symbol": "OMNOM" }
+        {
+          "chain": "Dogechain",
+          "type": "Router",
+          "address": "0x4aE2bD0666c76C7f39311b9B3e39b53C8D7C43Ea",
+          "symbol": ""
+        },
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xD0aA21244dc06D29d22D8D43d9D7c7Fb6e6c6F6d",
+          "symbol": "OMNOM"
+        }
       ],
-      "metrics": { "tvlUsd": 148690, "volume24hUsd": 536 },
-      "tags": ["dex", "amm", "liquidity", "dogechain-og"],
+      "metrics": {
+        "tvlUsd": 148690,
+        "volume24hUsd": 536
+      },
+      "tags": [
+        "dex",
+        "amm",
+        "liquidity",
+        "dogechain-og"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
@@ -56,10 +114,22 @@
       "discord": "https://discord.gg/dogechain",
       "github": "https://github.com/dogechainlab",
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x7B4328c127B85369D9f82ca0503B000D09CF9180", "symbol": "DC" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x7B4328c127B85369D9f82ca0503B000D09CF9180",
+          "symbol": "DC"
+        }
       ],
-      "metrics": { "tvlUsd": 21693, "volume24hUsd": 748 },
-      "tags": ["gas", "governance", "native-token"],
+      "metrics": {
+        "tvlUsd": 21693,
+        "volume24hUsd": 748
+      },
+      "tags": [
+        "gas",
+        "governance",
+        "native-token"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
@@ -79,10 +149,19 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101", "symbol": "WWDOGE" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
+          "symbol": "WWDOGE"
+        }
       ],
       "metrics": null,
-      "tags": ["wrapped", "bridge-asset", "dogecoin"],
+      "tags": [
+        "wrapped",
+        "bridge-asset",
+        "dogecoin"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -102,10 +181,19 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Router", "address": "0x1b2Df2c2C3B7860F52eDb1F0b76B1C2D3e7fB786", "symbol": "" }
+        {
+          "chain": "Dogechain",
+          "type": "Router",
+          "address": "0x1b2Df2c2C3B7860F52eDb1F0b76B1C2D3e7fB786",
+          "symbol": ""
+        }
       ],
       "metrics": null,
-      "tags": ["dex", "amm", "yield-farming"],
+      "tags": [
+        "dex",
+        "amm",
+        "yield-farming"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -125,11 +213,29 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Router", "address": "0x45AF55b43f0bC3f9C5bbE47b9c1b6e3fD8E5087", "symbol": "" },
-        { "chain": "Dogechain", "type": "Token",  "address": "0x46D5b8e6e2F2C5DcbD6e92cf4b3a1fF02c5eA6e6", "symbol": "CHEW" }
+        {
+          "chain": "Dogechain",
+          "type": "Router",
+          "address": "0xC4eB5512C4D2FF5B7Cf1F0D1E3b8E5D7A9C0F1B2",
+          "symbol": ""
+        },
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x46D5b8e6e2F2C5DcbD6e92cf4b3a1fF02c5eA6e6",
+          "symbol": "CHEW"
+        }
       ],
-      "metrics": { "tvlUsd": 475, "volume24hUsd": 1 },
-      "tags": ["dex", "amm", "community"],
+      "metrics": {
+        "tvlUsd": 475,
+        "volume24hUsd": 1
+      },
+      "tags": [
+        "amm",
+        "dex",
+        "community",
+        "unverified-router"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -149,10 +255,22 @@
       "discord": null,
       "github": "https://github.com/DBOT-DC/dtools-staking",
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x72d660c8b3Fd7c4c4c1F4c1d5B3e9a7C8e2E1b3A", "symbol": "DTOOLS" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x72d660c8b3Fd7c4c4c1F4c1d5B3e9a7C8e2E1b3A",
+          "symbol": "DTOOLS"
+        }
       ],
-      "metrics": { "tvlUsd": 74, "volume24hUsd": 0 },
-      "tags": ["staking", "rewards", "yield"],
+      "metrics": {
+        "tvlUsd": 74,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "staking",
+        "rewards",
+        "yield"
+      ],
       "addedAt": "2026-05-09T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -172,10 +290,20 @@
       "discord": "https://discord.gg/dogechain",
       "github": "https://github.com/dogechainlab",
       "contracts": [
-        { "chain": "Dogechain", "type": "Bridge", "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101", "symbol": "WWDOGE" }
+        {
+          "chain": "Dogechain",
+          "type": "Bridge",
+          "address": "0xb7ddc6414bf4f5515b52d8bdd69973ae205ff101",
+          "symbol": "WWDOGE"
+        }
       ],
       "metrics": null,
-      "tags": ["bridge", "dogecoin", "official", "wrapped"],
+      "tags": [
+        "bridge",
+        "dogecoin",
+        "official",
+        "wrapped"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
@@ -196,7 +324,12 @@
       "github": "https://github.com/DBOT-DC",
       "contracts": [],
       "metrics": null,
-      "tags": ["ai", "agent", "community", "utility"],
+      "tags": [
+        "ai",
+        "agent",
+        "community",
+        "utility"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": true,
@@ -217,7 +350,11 @@
       "github": "https://github.com/dogechainlab",
       "contracts": [],
       "metrics": null,
-      "tags": ["explorer", "infrastructure", "official"],
+      "tags": [
+        "explorer",
+        "infrastructure",
+        "official"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -237,10 +374,20 @@
       "discord": null,
       "github": "https://github.com/domo-eth/drc-20",
       "contracts": [
-        { "chain": "Dogecoin", "type": "Inscription", "address": "drc-20", "symbol": "DRC-20" }
+        {
+          "chain": "Dogecoin",
+          "type": "Inscription",
+          "address": "drc-20",
+          "symbol": "DRC-20"
+        }
       ],
       "metrics": null,
-      "tags": ["inscriptions", "drc-20", "nft", "dogecoin"],
+      "tags": [
+        "inscriptions",
+        "drc-20",
+        "nft",
+        "dogecoin"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -260,10 +407,22 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x1d6E5bB6F8C1b6F3eF2c6A1B7d9a1cE3F8c4D5e6", "symbol": "KIB" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x1d6E5bB6F8C1b6F3eF2c6A1B7d9a1cE3F8c4D5e6",
+          "symbol": "KIB"
+        }
       ],
-      "metrics": { "tvlUsd": 4327, "volume24hUsd": 3 },
-      "tags": ["dex", "amm", "governance"],
+      "metrics": {
+        "tvlUsd": 4327,
+        "volume24hUsd": 3
+      },
+      "tags": [
+        "dex",
+        "amm",
+        "governance"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -283,10 +442,19 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Router", "address": "0x4D5A9c2c8B6eF8b3a2C9F7e1D5B6c8E7F9a1B2c3", "symbol": "" }
+        {
+          "chain": "Dogechain",
+          "type": "Router",
+          "address": "0x4D5A9c2c8B6eF8b3a2C9F7e1D5B6c8E7F9a1B2c3",
+          "symbol": ""
+        }
       ],
       "metrics": null,
-      "tags": ["dex", "aggregator", "tooling"],
+      "tags": [
+        "dex",
+        "aggregator",
+        "tooling"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -307,7 +475,11 @@
       "github": "https://github.com/QuickSwap",
       "contracts": [],
       "metrics": null,
-      "tags": ["dex", "polygon-originated", "deployment"],
+      "tags": [
+        "dex",
+        "polygon-originated",
+        "deployment"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -328,7 +500,11 @@
       "github": "https://github.com/FraxFinance",
       "contracts": [],
       "metrics": null,
-      "tags": ["dex", "frax", "stables"],
+      "tags": [
+        "dex",
+        "frax",
+        "stables"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -349,7 +525,10 @@
       "github": null,
       "contracts": [],
       "metrics": null,
-      "tags": ["dex", "community"],
+      "tags": [
+        "dex",
+        "community"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -369,10 +548,22 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x3a1b2C4d5E6f7890aB1c2D3e4F506172819aF8e2", "symbol": "DogeShrek" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x3a1b2C4d5E6f7890aB1c2D3e4F506172819aF8e2",
+          "symbol": "DogeShrek"
+        }
       ],
-      "metrics": { "tvlUsd": 6067, "volume24hUsd": 1 },
-      "tags": ["dex", "meme", "community"],
+      "metrics": {
+        "tvlUsd": 6067,
+        "volume24hUsd": 1
+      },
+      "tags": [
+        "dex",
+        "meme",
+        "community"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -392,10 +583,22 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x3D7E8c4B6a2D1F0E9C5b8A7d6F5e4C3b2A1D0e9F", "symbol": "DINU" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x3D7E8c4B6a2D1F0E9C5b8A7d6F5e4C3b2A1D0e9F",
+          "symbol": "DINU"
+        }
       ],
-      "metrics": { "tvlUsd": 45661, "volume24hUsd": 0 },
-      "tags": ["meme", "shiba-inspired", "high-tvl"],
+      "metrics": {
+        "tvlUsd": 45661,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "shiba-inspired",
+        "high-tvl"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -415,10 +618,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x4C5D6e7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d", "symbol": "DogeCorn" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x4C5D6e7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d",
+          "symbol": "DogeCorn"
+        }
       ],
-      "metrics": { "tvlUsd": 371, "volume24hUsd": 2 },
-      "tags": ["meme", "community"],
+      "metrics": {
+        "tvlUsd": 371,
+        "volume24hUsd": 2
+      },
+      "tags": [
+        "meme",
+        "community"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -438,10 +652,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x5D6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E", "symbol": "Kibby" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x5D6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E",
+          "symbol": "Kibby"
+        }
       ],
-      "metrics": { "tvlUsd": 46, "volume24hUsd": 0 },
-      "tags": ["meme", "kibbleswap"],
+      "metrics": {
+        "tvlUsd": 46,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "kibbleswap"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -461,10 +686,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F", "symbol": "shibes" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x6E7f8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F",
+          "symbol": "shibes"
+        }
       ],
-      "metrics": { "tvlUsd": 157, "volume24hUsd": 0 },
-      "tags": ["meme", "shiba"],
+      "metrics": {
+        "tvlUsd": 157,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "shiba"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -484,10 +720,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A", "symbol": "TDH" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x7F8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A",
+          "symbol": "TDH"
+        }
       ],
-      "metrics": { "tvlUsd": 1143, "volume24hUsd": 2 },
-      "tags": ["meme", "community"],
+      "metrics": {
+        "tvlUsd": 1143,
+        "volume24hUsd": 2
+      },
+      "tags": [
+        "meme",
+        "community"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -507,10 +754,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B", "symbol": "KENSHI" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x8A9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B",
+          "symbol": "KENSHI"
+        }
       ],
-      "metrics": { "tvlUsd": 373, "volume24hUsd": 0 },
-      "tags": ["meme", "trading"],
+      "metrics": {
+        "tvlUsd": 373,
+        "volume24hUsd": 0
+      },
+      "tags": [
+        "meme",
+        "trading"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -530,10 +788,21 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0x9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B8C", "symbol": "SALAMANDRA" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0x9b0C1d2E3f4A5b6C7d8E9f0A1B2C3d4E5F6A7B8C",
+          "symbol": "SALAMANDRA"
+        }
       ],
-      "metrics": { "tvlUsd": 598, "volume24hUsd": 1 },
-      "tags": ["meme", "lizard"],
+      "metrics": {
+        "tvlUsd": 598,
+        "volume24hUsd": 1
+      },
+      "tags": [
+        "meme",
+        "lizard"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -553,10 +822,22 @@
       "discord": null,
       "github": null,
       "contracts": [
-        { "chain": "Dogechain", "type": "Token", "address": "0xa1B2C3d4E5f6A7b8C9d0E1f2A3b4C5d6E7f8A9b0", "symbol": "vXÐ" }
+        {
+          "chain": "Dogechain",
+          "type": "Token",
+          "address": "0xa1B2C3d4E5f6A7b8C9d0E1f2A3b4C5d6E7f8A9b0",
+          "symbol": "vXÐ"
+        }
       ],
-      "metrics": { "tvlUsd": 163, "volume24hUsd": 2 },
-      "tags": ["stablecoin", "pegged", "experimental"],
+      "metrics": {
+        "tvlUsd": 163,
+        "volume24hUsd": 2
+      },
+      "tags": [
+        "stablecoin",
+        "pegged",
+        "experimental"
+      ],
       "addedAt": "2026-06-02T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -577,7 +858,11 @@
       "github": "https://github.com/DBOT-DC/dogechain-faucet",
       "contracts": [],
       "metrics": null,
-      "tags": ["faucet", "developer-tools", "free-dc"],
+      "tags": [
+        "faucet",
+        "developer-tools",
+        "free-dc"
+      ],
       "addedAt": "2026-03-25T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
@@ -598,7 +883,11 @@
       "github": "https://github.com/DBOT-DC/dc-token-tracker",
       "contracts": [],
       "metrics": null,
-      "tags": ["analytics", "tracker", "transparency"],
+      "tags": [
+        "analytics",
+        "tracker",
+        "transparency"
+      ],
       "addedAt": "2026-06-01T00:00:00Z",
       "addedBy": "dbot-initial-seed",
       "featured": false,
