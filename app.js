@@ -10,11 +10,13 @@ const DATA_URL = './data/projects.json';
 const VOTE_KEY = 'pulse:votes:v1';
 const SUBMIT_KEY = 'pulse:submissions:v1';
 const WALLET_KEY = 'pulse:wallet:v1';
+const VOTE_SIG_PREFIX = 'pulse:vote:';
+const VOTE_SIG_INDEX = 'pulse:vote:__index';
+const PULSE_PREFIX = 'pulse:';
 const DAILY_VOTE_BUDGET = 30;
 const REFRESH_BLOCK_MS = 30_000;
 const SIWE_DOMAIN = (typeof location !== 'undefined' ? location.host : 'pulse.dogechain.dog');
 const SIWE_EXPIRY_DAYS = 7;
-
 let data = null;
 let votes = loadVotes();
 let submissions = loadSubmissions();
@@ -25,35 +27,109 @@ let sortBy = 'votes';
 let blockTimer = null;
 
 // ─── Persistence ───────────────────────────────────────────────────
-function loadVotes() {
-  try { return JSON.parse(localStorage.getItem(VOTE_KEY) || '{}'); } catch { return {}; }
-}
-function saveVotes() {
-  try { localStorage.setItem(VOTE_KEY, JSON.stringify(votes)); } catch {}
-}
-function loadSubmissions() {
-  try { return JSON.parse(localStorage.getItem(SUBMIT_KEY) || '[]'); } catch { return []; }
-}
-function saveSubmissions() {
-  try { localStorage.setItem(SUBMIT_KEY, JSON.stringify(submissions)); } catch {}
-}
-function loadWallet() {
+// Single parse primitive — self-heals on corrupt JSON, warns in dev.
+function safeParse(key, fallback) {
   try {
-    const raw = JSON.parse(localStorage.getItem(WALLET_KEY) || 'null');
-    if (!raw) return null;
-    // Check expiry
-    if (raw.expiresAt && raw.expiresAt < Date.now()) {
-      localStorage.removeItem(WALLET_KEY);
-      return null;
+    const v = JSON.parse(localStorage.getItem(key) || 'null');
+    return v == null ? fallback : v;
+  } catch (err) {
+    console.warn(`[pulse] corrupt key "${key}", resetting:`, err);
+    try { localStorage.removeItem(key); } catch {}
+    return fallback;
+  }
+}
+
+// Single write primitive — surfaces QuotaExceededError as a user toast,
+// returns true on success so callers can roll back in-memory state on failure.
+function store(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (err) {
+    const isQuota = err && (err.name === 'QuotaExceededError' || err.code === 22 || err.code === 1014);
+    if (isQuota && typeof showToast === 'function') {
+      showToast('Browser storage is full — your vote may not persist. Try clearing site data.', 'err');
+    } else {
+      console.warn(`[pulse] write failed for ${key}:`, err);
     }
-    return raw;
-  } catch { return null; }
+    return false;
+  }
+}
+
+const voteSigKey = id => `${VOTE_SIG_PREFIX}${id}`;
+
+function loadVotes()       { return safeParse(VOTE_KEY, {}); }
+function saveVotes()       { return store(VOTE_KEY, votes); }
+function loadSubmissions() { return safeParse(SUBMIT_KEY, []); }
+function saveSubmissions() { return store(SUBMIT_KEY, submissions); }
+function loadWallet() {
+  const raw = safeParse(WALLET_KEY, null);
+  if (raw && raw.expiresAt && raw.expiresAt < Date.now()) {
+    try { localStorage.removeItem(WALLET_KEY); } catch {}
+    return null;
+  }
+  return raw;
 }
 function saveWallet(w) {
+  if (w) return store(WALLET_KEY, w);
+  try { localStorage.removeItem(WALLET_KEY); } catch {}
+  return true;
+}
+
+// Per-project sig index — keeps listVoteSigs() O(1) instead of O(n) over localStorage.
+function touchSigIndex(id) {
   try {
-    if (w) localStorage.setItem(WALLET_KEY, JSON.stringify(w));
-    else localStorage.removeItem(WALLET_KEY);
+    const ids = JSON.parse(localStorage.getItem(VOTE_SIG_INDEX) || '[]');
+    if (!ids.includes(id)) { ids.push(id); localStorage.setItem(VOTE_SIG_INDEX, JSON.stringify(ids)); }
   } catch {}
+}
+function untouchSigIndex(id) {
+  try {
+    const ids = JSON.parse(localStorage.getItem(VOTE_SIG_INDEX) || '[]').filter(x => x !== id);
+    localStorage.setItem(VOTE_SIG_INDEX, JSON.stringify(ids));
+  } catch {}
+}
+function listVoteSigs() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(VOTE_SIG_INDEX) || '[]');
+    return ids.map(id => ({ id, sig: loadVoteSig(id) })).filter(x => x.sig);
+  } catch { return []; }
+}
+
+// Backup / restore — every pulse:* key in one JSON blob.
+function exportData() {
+  return JSON.stringify({
+    __v: 1,
+    exportedAt: new Date().toISOString(),
+    votes: loadVotes(),
+    submissions: loadSubmissions(),
+    wallet: loadWallet(),
+    sigs: listVoteSigs().reduce((acc, { id, sig }) => (acc[id] = sig, acc), {})
+  }, null, 2);
+}
+function importData(json, { merge = true } = {}) {
+  let obj; try { obj = JSON.parse(json); } catch { return { ok: false, error: 'not json' }; }
+  if (!obj || typeof obj !== 'object') return { ok: false, error: 'bad shape' };
+  if (!merge) clearAllLocalData();
+  if (obj.votes)       { votes       = merge ? { ...loadVotes(),       ...obj.votes }       : obj.votes;       saveVotes(); }
+  if (obj.submissions) { submissions = merge ? [...loadSubmissions(),  ...obj.submissions] : obj.submissions; saveSubmissions(); }
+  if (obj.wallet !== undefined) { wallet = obj.wallet; saveWallet(wallet); }
+  if (obj.sigs) for (const [id, sig] of Object.entries(obj.sigs)) {
+    if (sig && sig.address && sig.sig && sig.ts) { store(voteSigKey(id), sig); touchSigIndex(id); }
+  }
+  return { ok: true, merged: merge };
+}
+
+// Reset to clean slate. Cache mutation matters — without it the next render
+// would show the old data. The 'storage' event does NOT fire in the clearing tab.
+function clearAllLocalData() {
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(PULSE_PREFIX)) toRemove.push(k);
+  }
+  toRemove.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+  votes = {}; submissions = []; wallet = null;
 }
 
 // ─── Time / format helpers ─────────────────────────────────────────
@@ -90,7 +166,11 @@ const LUCIDE = {
   'check':          '<polyline points="20 6 9 17 4 12"/>',
   'copy':           '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   'arrow-left':     '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
-  'x':              '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+  'x':              '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  'info-circle':    '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  'book-open':      '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  'bar-chart-3':    '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+  'chevron-down':   '<polyline points="6 9 12 15 18 9"/>'
 };
 const lucide = (name, size = 13) => {
   const path = LUCIDE[name] || LUCIDE['sparkles'];
@@ -169,20 +249,17 @@ function categoryDef(id) {
 // private window and vote again. Acceptable for a community-directory MVP.
 // Future hardening: a Cloudflare Worker that verifies the EIP-4361 sig
 // and dedupes by (address, projectId) on the server side.
-const VOTE_SIG_PREFIX = 'pulse:vote:';
-const voteSigKey = id => `${VOTE_SIG_PREFIX}${id}`;
 
 function loadVoteSig(id) {
-  try {
-    const raw = JSON.parse(localStorage.getItem(voteSigKey(id)) || 'null');
-    if (!raw) return null;
-    if (!raw.address || !raw.sig || !raw.nonce || !raw.ts) return null;
-    if (Date.now() - raw.ts > SIWE_EXPIRY_DAYS * 86400_000) {
-      localStorage.removeItem(voteSigKey(id));
-      return null;
-    }
-    return raw;
-  } catch { return null; }
+  const raw = safeParse(voteSigKey(id), null);
+  if (!raw) return null;
+  if (!raw.address || !raw.sig || !raw.nonce || !raw.ts) { untouchSigIndex(id); return null; }
+  if (Date.now() - raw.ts > SIWE_EXPIRY_DAYS * 86400_000) {
+    try { localStorage.removeItem(voteSigKey(id)); } catch {}
+    untouchSigIndex(id);
+    return null;
+  }
+  return raw;
 }
 
 // Build the EIP-4361 SIWE message we ask the wallet to sign.
@@ -230,8 +307,8 @@ async function signVoteFor(projectId) {
     return null;
   }
   const record = { address: wallet.address, sig, ts: Date.now(), nonce };
-  try { localStorage.setItem(voteSigKey(projectId), JSON.stringify(record)); } catch {}
-  return record;
+  if (store(voteSigKey(projectId), record)) { touchSigIndex(projectId); return record; }
+  return null;
 }
 
 // Returns one of: 'disconnected' | 'ready' | 'voted'
@@ -273,7 +350,14 @@ async function voteFor(id) {
   if (!votes[id]) votes[id] = { daily: {} };
   if (!votes[id].daily[k]) votes[id].daily[k] = {};
   votes[id].daily[k][id] = Date.now();
-  saveVotes();
+  if (!saveVotes()) {
+    // Rollback: failed write should not be visible to the user.
+    delete votes[id].daily[k][id];
+    if (Object.keys(votes[id].daily[k]).length === 0) delete votes[id].daily[k];
+    if (Object.keys(votes[id].daily).length === 0)    delete votes[id];
+    showToast('Vote not saved. Storage may be full or blocked.', 'err');
+    return;
+  }
   // Optimistic UI updates + toast.
   showToast(`Vote recorded for ${p.name} · signature expires in 7 days`, 'ok');
   renderGrid();
@@ -875,37 +959,36 @@ function handleRoute() {
   if (h.startsWith('#/project/')) {
     const id = decodeURIComponent(h.replace('#/project/', ''));
     if (data && projectById(id)) openDetail(id);
-  } else if (h === '#/about') {
-    showStaticPage('About', aboutContent());
-  } else if (h === '#/methodology') {
-    showStaticPage('Methodology', methodologyContent());
-  } else if (h === '#/stats') {
-    showStaticPage('Stats', statsContent());
-  } else {
-    closeStaticPage();
   }
 }
-function showStaticPage(title, body) {
-  let host = document.getElementById('staticPage');
-  if (!host) {
-    host = document.createElement('section');
-    host.id = 'staticPage';
-    host.className = 'static-page';
-    document.querySelector('.app').appendChild(host);
-  }
-  host.innerHTML = `<div class="static-wrap"><h1>${esc(title)}</h1>${body}<p><a href="#/" class="btn ghost small"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:4px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back to directory</a></p></div>`;
-  host.scrollIntoView({ behavior: 'smooth' });
-  document.getElementById('grid')?.setAttribute('hidden', '');
-  document.querySelector('.toolbar')?.setAttribute('hidden', '');
-  document.querySelector('.catbar')?.setAttribute('hidden', '');
+
+// ─── Accordion (inline About / Methodology / Stats) ─────────────────
+function renderAccordion() {
+  const items = [
+    { id: 'about',        icon: 'info-circle',  title: 'About',        sub: 'Community-curated directory of Dogechain projects',  body: aboutContent() },
+    { id: 'methodology',  icon: 'book-open',    title: 'Methodology',  sub: 'How projects get listed, verified, and voted on',   body: methodologyContent() },
+    { id: 'stats',        icon: 'bar-chart-3',  title: 'Stats',        sub: 'Network metrics, refresh cadence, and data sources', body: statsContent() },
+  ];
+  return `<section class="acc" aria-label="About, methodology, and stats">${
+    items.map(it => `
+      <details class="acc-item" id="acc-${it.id}">
+        <summary class="acc-head">
+          <span class="acc-icon">${lucide(it.icon, 16)}</span>
+          <span class="acc-title">${it.title}</span>
+          <span class="acc-sub">— ${it.sub}</span>
+          <span class="acc-spacer"></span>
+          <span class="acc-chev">${lucide('chevron-down', 16)}</span>
+        </summary>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-inner-pad">
+            <hr>${it.body}
+            <button type="button" class="acc-gotit" data-acc-close="${it.id}">Got it</button>
+          </div>
+        </div></div>
+      </details>`).join('')
+  }</section>`;
 }
-function closeStaticPage() {
-  const host = document.getElementById('staticPage');
-  if (host) host.remove();
-  document.getElementById('grid')?.removeAttribute('hidden');
-  document.querySelector('.toolbar')?.removeAttribute('hidden');
-  document.querySelector('.catbar')?.removeAttribute('hidden');
-}
+
 function aboutContent() {
   return `
     <p><strong>Dogechain Pulse</strong> is a community-curated directory of projects, protocols, and people building on the <a href="https://dogechain.dog" target="_blank" rel="noopener">Dogechain Network</a>. It's open source, has no accounts, and no server. The data is a single JSON file in the GitHub repo that anyone can read, fork, or submit to.</p>
@@ -1039,6 +1122,32 @@ async function init() {
   renderCategoryChips();
   renderGrid();
   handleRoute();
+
+  // Inline accordion (About / Methodology / Stats) — sits between grid and footer
+  const _foot = document.querySelector('.app > .foot');
+  if (_foot) {
+    const _acc = document.createElement('div');
+    _acc.innerHTML = renderAccordion();
+    while (_acc.firstChild) _foot.parentNode.insertBefore(_acc.firstChild, _foot);
+  }
+  // "Got it" button → collapse the panel and smooth-scroll to it
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-acc-close]');
+    if (!t) return;
+    const det = document.getElementById('acc-' + t.dataset.accClose);
+    if (det) { det.open = false; det.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+
+  // Cross-tab sync: writes to any pulse:* key in another tab fire 'storage' here.
+  // The writing tab does NOT receive this event, so no loop risk.
+  window.addEventListener('storage', (e) => {
+    if (!e.key || !e.key.startsWith('pulse:')) return;
+    votes       = loadVotes();
+    submissions = loadSubmissions();
+    wallet      = loadWallet();
+    renderStats();
+    renderGrid();
+  });
 
   // Periodic block refresh
   clearInterval(blockTimer);

@@ -196,12 +196,15 @@ header.hero h1::first-line { color: var(--text); }
 /* ─── Category chips (sleek) ────────────────────────────────────── */
 .catbar {
   display: flex; flex-wrap: wrap; gap: 6px;
+  align-items: center;
   margin-bottom: 24px;
   padding: 4px 0;
 }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 12px;
+  height: auto;
+  align-self: center;
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -210,6 +213,8 @@ header.hero h1::first-line { color: var(--text); }
   letter-spacing: 0.01em;
   transition: all 0.15s var(--ease);
   cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .chip:hover {
   color: var(--text); border-color: var(--line-2); background: var(--bg-2);
@@ -230,6 +235,14 @@ header.hero h1::first-line { color: var(--text); }
   margin-left: 2px; padding-left: 6px;
 }
 .chip[aria-pressed="true"] .chip-n { color: rgba(26, 26, 26, 0.5); border-left-color: rgba(26, 26, 26, 0.2); }
+
+/* Lucide SVG inside chips: enforce the size we passed in the markup */
+.chip .lucide-ico { width: 12px !important; height: 12px !important; flex-shrink: 0; }
+
+/* Empty categories (count = 0) — visually de-emphasized but same size */
+.chip.empty { opacity: 0.5; }
+.chip.empty:hover { opacity: 0.75; }
+.chip.empty .count { color: var(--text-faint); }
 
 /* ─── Grid ──────────────────────────────────────────────────────── */
 .grid {
@@ -647,11 +660,11 @@ dialog[open]::backdrop { animation: backdropIn 0.25s var(--ease-out) both; }
 .toast.err { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
 
 /* ─── Empty / error / loading states ────────────────────────────── */
-.empty, .err-state {
+.empty:not(.chip), .err-state:not(.chip) {
   text-align: center; padding: 60px 20px;
   color: var(--text-dim);
 }
-.empty svg, .err-state svg {
+.empty:not(.chip) svg, .err-state:not(.chip) svg {
   width: 32px; height: 32px; margin: 0 auto 12px;
   color: var(--text-faint);
 }
@@ -681,6 +694,51 @@ dialog[open]::backdrop { animation: backdropIn 0.25s var(--ease-out) both; }
   margin-bottom: 18px; font-size: 13px; color: var(--text-dim);
 }
 .static-page .back-link:hover { color: var(--text); }
+
+/* ─── Inline accordion (About / Methodology / Stats) ──────────── */
+.acc { max-width: 960px; margin: 28px auto 0; display: flex; flex-direction: column; gap: 8px; }
+.acc-item {
+  background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 10px; overflow: hidden;
+  transition: border-color .18s ease;
+}
+.acc-item:hover { border-color: var(--line-3); }
+.acc-item[open] { border-color: var(--accent); }
+.acc-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer; user-select: none;
+  list-style: none;
+}
+.acc-head::-webkit-details-marker { display: none; }
+.acc-icon { display: inline-flex; color: var(--accent); flex-shrink: 0; }
+.acc-icon svg { display: block; }
+.acc-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.acc-sub   { font-size: 12px; color: var(--text-dim); margin-left: 4px; }
+.acc-spacer { flex: 1; }
+.acc-chev  { color: var(--text-dim); transition: transform .25s ease, color .18s ease; display: inline-flex; }
+.acc-chev svg { display: block; }
+.acc-item[open] .acc-chev { transform: rotate(180deg); color: var(--accent); }
+/* grid-template-rows trick for proper max-height animation */
+.acc-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .28s ease;
+}
+.acc-item[open] .acc-body { grid-template-rows: 1fr; }
+.acc-body > .acc-inner { overflow: hidden; }
+.acc-inner-pad { padding: 0 18px 18px; }
+.acc-inner-pad h2 { font-size: 15px; font-weight: 600; margin: 14px 0 8px; color: var(--text); }
+.acc-inner-pad h2:first-child { margin-top: 0; }
+.acc-inner-pad p, .acc-inner-pad li { color: var(--text-dim); line-height: 1.65; font-size: 13px; }
+.acc-inner-pad ul, .acc-inner-pad ol { padding-left: 20px; }
+.acc-inner-pad hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0 6px; }
+.acc-gotit {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 7px 14px; font-size: 12px; font-weight: 600;
+  color: var(--bg); background: var(--accent);
+  border: 0; border-radius: 6px; cursor: pointer;
+  transition: opacity .15s ease;
+}
+.acc-gotit:hover { opacity: .85; }
 
 /* ─── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
