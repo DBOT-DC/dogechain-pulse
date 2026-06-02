@@ -1,0 +1,3 @@
+Contact: https://github.com/DBOT-DC/dogechain-pulse/issues
+Preferred-Languages: en
+Canonical: https://pulse.dogechain.dog/.well-known/security.txt

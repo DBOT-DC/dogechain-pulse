@@ -1,19 +1,48 @@
-# Dogechain Pulse
+# 🐾 Dogechain Pulse
 
-> Discover the Dogechain Network.
+> **Discover the Dogechain Network.**
 
-A community-driven directory of projects, protocols, and people building on **Dogechain** (chain ID 2000). Open-source, no accounts, no server.
+A community-driven, open-source directory of projects, protocols, and people building on the [Dogechain Network](https://dogechain.dog) (chain ID 2000). No accounts. No server. No gatekeepers.
+
+🌐 **Live:** [pulse.dogechain.dog](https://pulse.dogechain.dog) (or wherever it's deployed)
+📦 **Data API:** [`data/projects.json`](./data/projects.json) — free, public, versioned
+💻 **Source:** [github.com/DBOT-DC/dogechain-pulse](https://github.com/DBOT-DC/dogechain-pulse)
+
+---
 
 ## Why this exists
 
-Dogechain is a working EVM chain with ~$240K TVL, 13 DEXes (9 dormant), and a real discovery problem. New projects launch and die in silence. DOGE holders outside the chain have no place to find what's happening.
+Dogechain is a working EVM chain with real DeFi, real tokens, and a real community — but no good discovery surface. The official blog has been silent since May 2024. New projects launch and die in obscurity. DOGE holders outside the chain have no single landing page to find what's happening.
 
-Pulse is that place. The community curates it.
+**Pulse is that landing page.** The community curates it.
 
-## Run it
+## Features
+
+- 📚 **Directory** — 26+ real Dogechain projects across 8 categories (DeFi, NFT, Gaming, Social, Infra, Tooling, Bridge, Meme)
+- 🔍 **Search** by name, tagline, contract, or category
+- 🏷 **Filter** by category, with live counts
+- ⬆ **Community upvotes** (30/day per browser — anti-spam without auth)
+- 🌟 **Spotlight** — the highest-voted project gets the daily banner
+- 📈 **Live stats** — projects, categories, total TVL, votes, latest block
+- ➕ **Submit a project** — opens a prefilled GitHub Issue for permanent inclusion
+- ⌨ **Keyboard** — `/` to search, `Esc` to close, `Enter` to open a card
+- 🔌 **Public API** — `data/projects.json` is a free, versioned, read-only directory
+- 📱 **Responsive** — desktop, tablet, mobile (380px+), dark theme
+- ♿ **Accessible** — semantic HTML, ARIA, focus management, reduced-motion support
+- 🖨 **Print-friendly** — clean print stylesheet for offline use
+
+## Stack
+
+- **Vanilla HTML / CSS / JS** — no build step, no dependencies, no framework
+- **One external call at runtime:** the public Dogechain RPC for live block height
+- ~30 KB total (gzipped)
+- **No backend, no auth, no accounts, no tracking**
+- **Deploy anywhere static:** Vercel, Netlify, Cloudflare Pages, GitHub Pages, S3, or just open the file
+
+## Run it locally
 
 ```bash
-# Option 1: open directly (works for everything except fetch-from-disk restrictions)
+# Option 1: open directly (works for everything except fetch-from-disk restrictions in some browsers)
 open index.html
 
 # Option 2: serve it (recommended — needed for fetch to work in some browsers)
@@ -21,17 +50,30 @@ python3 -m http.server 8000
 # → http://localhost:8000
 ```
 
-## Features
+## Project layout
 
-- 📚 **Directory** of every notable Dogechain project, with contracts, socials, and metrics
-- 🔍 **Search** by name, tagline, contract, or category
-- 🏷️ **Filter** by category (DeFi, NFT, Gaming, Social, Infra, Tooling)
-- ⬆️ **Community upvotes** (30/day per browser — anti-spam without auth)
-- 🌟 **Spotlight rotation** — highest-voted project gets the banner
-- 📈 **Live stats strip** — projects, categories, total TVL, votes, latest block height
-- ➕ **Submit a project** — community-driven intake; live immediately with a "pending" badge
-- ⌨️ **Keyboard** — `/` to search, `Esc` to close, `Enter` to open a card
-- 🔌 **Public API** — `data/projects.json` is the canonical directory; fetch it from anywhere
+```
+dogechain-pulse/
+├── SPEC.md                  # full spec
+├── README.md                # you are here
+├── LICENSE                  # MIT
+├── index.html               # the entire frontend
+├── app.js                   # ~650 lines — voting, search, submit, routing
+├── styles.css               # ~530 lines — design system + responsive
+├── data/
+│   └── projects.json        # canonical directory (the "DB") — public, versioned
+├── vercel.json              # deploy config + security headers
+├── sitemap.xml              # SEO
+├── robots.txt               # SEO
+├── manifest.json            # PWA manifest
+├── icon.svg                 # PWA icon
+├── .well-known/
+│   └── security.txt         # security disclosure
+├── .github/
+│   ├── workflows/validate.yml  # CI: validate projects.json on PR
+│   └── ISSUE_TEMPLATE/pulse-submission.md  # submission template
+└── .gitignore
+```
 
 ## Public API
 
@@ -40,40 +82,67 @@ python3 -m http.server 8000
 curl https://pulse.dogechain.dog/data/projects.json
 ```
 
-Schema: see [SPEC.md](./SPEC.md#data-schema-projectsjson).
+**Schema:** see [SPEC.md](./SPEC.md#data-schema-projectsjson).
 
 Anyone can read it. Anyone can fork it. Submit a PR to add a new project to the canonical list.
 
-## File layout
+## Submitting a project
 
+1. Click **+ Submit a project** in the header
+2. Fill out the form
+3. A prefilled GitHub Issue is opened with your data
+4. A maintainer reviews and merges — your project goes live
+
+Submissions also save locally in your browser so you can see your submission immediately with a "pending" badge while the maintainer reviews.
+
+## Contributing
+
+The whole point is that the community owns this. To add a project:
+
+```bash
+# Fork the repo
+gh repo fork DBOT-DC/dogechain-pulse
+
+# Add your project to data/projects.json
+# (follow the schema in SPEC.md)
+
+# Open a PR
+gh pr create --title "Add: <Project Name>" --body "..."
 ```
-dogechain-pulse/
-├── SPEC.md             # full spec
-├── README.md           # you are here
-├── index.html          # the entire frontend
-└── data/
-    └── projects.json   # canonical project directory (the "DB")
-```
 
-## Stack
+CI will automatically validate your JSON against the schema.
 
-- Vanilla HTML / CSS / JS — **no build step**
-- No backend, no auth, no accounts
-- One external call at runtime: the public Dogechain RPC (`rpc.dogechain.dog`) for the block height
-- ~46KB total
+## Deployment
+
+This site is configured for Vercel out of the box (`vercel.json` with security headers and caching rules). It also works on:
+
+- **Netlify** — drop the folder, no config needed
+- **Cloudflare Pages** — connect the repo, no build command
+- **GitHub Pages** — push to `gh-pages` branch
+- **Any static host** — it's just files
 
 ## Roadmap
 
-v1 (this):
-- Directory, search, filter, sort, voting, submit-a-project, detail modal, live stats
+**v1 (shipped):**
+- Directory, search, filter, sort, voting, submit-a-project, detail modal, live stats, About/Methodology/Stats pages, shareable `/project/<id>` routes, mobile responsive, accessibility, PWA manifest, security headers, SEO (sitemap, robots, OG), CI validation, MIT licensed
 
-v2 (next):
-- Authenticated voting via wallet signature (kills the 30/day budget)
-- Submissions flow to a GitHub PR workflow instead of localStorage
-- Auto-derive per-project TVL / holder count from on-chain calls
+**v1.5 (next, when traffic justifies it):**
+- Optional wallet-signed voting (kills the 30/day localStorage budget)
+- Plausible / CF Web Analytics for opt-in traffic insight
+- Custom domain `pulse.dogechain.dog`
+- Real OG image generation for shareable links
+
+**v2 (future):**
+- Per-project activity feeds (recent tweets, commits, votes)
+- "Watchlist" / following
 - Telegram bot for `/pulse add` submissions
 - Embeddable trending widget for third-party sites
+- Auto-derive TVL/holders per project from on-chain calls
 
 ## License
 
 MIT. Fork it, run it, ship your own version for your own community. The chain needs more signal, not more gatekeepers.
+
+---
+
+Built and maintained by [**DBOT**](https://dbot.dog) — the Dogechain community agent. 🐶🤖

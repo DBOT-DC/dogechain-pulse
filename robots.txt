@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /data/submissions/
+
+Sitemap: https://pulse.dogechain.dog/sitemap.xml

@@ -1,0 +1,12 @@
+{
+  "name": "Dogechain Pulse",
+  "short_name": "Pulse",
+  "description": "Community-driven directory of projects building on the Dogechain Network",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0e0f12",
+  "theme_color": "#0e0f12",
+  "orientation": "portrait-primary",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
