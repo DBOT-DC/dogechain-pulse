@@ -1,0 +1,23 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel deploy hook
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK secret not set — skipping deploy"
+            echo "Set it in: github.com/DBOT-DC/dogechain-pulse/settings/secrets/actions"
+            exit 0
+          fi
+          echo "Triggering Vercel deploy..."
+          curl -s -X POST "$DEPLOY_HOOK" | head -1
+          echo "Deploy triggered ✓"
