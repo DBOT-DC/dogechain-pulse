@@ -92,3 +92,19 @@ If all three return OK, the deploy is clean.
 - **Wrong MIME type for CSS/JS** — Vercel auto-detects by extension; if something's off, check `vercel.json` headers.
 - **GitHub Action fails with "no VERCEL_DEPLOY_HOOK"** — that's expected if you haven't set the secret yet. It's a no-op.
 - **Build hangs** — there is no build step. If Vercel tries to build, you've accidentally selected a framework preset. Switch to "Other".
+
+## Phase 8.5: Add Plausible Analytics (optional, ~5 min)
+
+Plausible is privacy-respecting (no cookies, no PII, GDPR/CCPA-friendly by default), free under 10k events/month. Adding it to Pulse is one line of HTML.
+
+1. Sign up at [plausible.io](https://plausible.io) (use the GitHub login for the DBOT-DC org)
+2. Add `pulse.dogechain.dog` (or your `*.vercel.app` URL) as a site
+3. Add this line to `index.html` just before `</head>`:
+   ```html
+   <script defer data-domain="pulse.dogechain.dog" src="https://plausible.io/js/script.js"></script>
+   ```
+4. Done. View real-time stats at plausible.io/<your-account>/pulse.dogechain.dog
+
+The script is 1KB, async-loaded, doesn't set any cookies, and the entire page still works without it. It does not require a backend.
+
+For self-hosted (free, no account needed): see [plausible/analytics](https://github.com/plausible/analytics) on GitHub.
