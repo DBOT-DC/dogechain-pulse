@@ -101,6 +101,31 @@ Anyone can read it. Anyone can fork it. Submit a PR to add a new project to the 
 
 Submissions also save locally in your browser so you can see your submission immediately with a "pending" badge while the maintainer reviews.
 
+### For maintainers: getting notified of new submissions
+
+**Option 1 (easiest): GitHub email notifications.** Two clicks:
+
+1. Go to https://github.com/DBOT-DC/dogechain-pulse/subscription
+2. Check **"Subscribed to issues you create or are assigned to"** OR click **"Watch → Custom → Issues"** to subscribe to all issues
+3. (Optional) On https://github.com/settings/notifications, check the box for **"Email"** under Issues
+
+You'll now get an email every time someone files a `pulse-submission` issue.
+
+**Option 2 (richer): automatic verification + Telegram DM.** When a submission lands, a watchdog script on the DBOT server:
+
+- Pulls the issue body
+- `eth_call`s the contract on the Dogechain public RPC (verifies it's a real ERC-20, gets name/symbol/decimals/supply)
+- HEAD-checks the website, twitter, telegram, github links
+- Dedups against `data/projects.json` (catches duplicate names and contract addresses)
+- DMs `@PennybagsCX` on Telegram with a parsed review packet (✅/❌ per check + the issue link)
+
+This means the maintainer sees a clean review in Telegram, not a wall of GitHub email. Setup: the `pulse-submissions-watch` skill in `~/.hermes/skills/` runs as a Hermes cron job every 15 minutes. No server to maintain — it's a 200-line Node script + a bash wrapper, both open source and committed to the repo:
+
+- `scripts/verify-submission.js` — the verifier (eth_call, social checks, dedup). MIT licensed, runnable standalone.
+- `~/.hermes/skills/pulse-submissions-watch/watch-submissions.mjs` — the poller + DM sender.
+- `~/.hermes/scripts/pulse-submissions-watchdog.sh` — the bash wrapper.
+
+
 ## Contributing
 
 The whole point is that the community owns this. To add a project:
