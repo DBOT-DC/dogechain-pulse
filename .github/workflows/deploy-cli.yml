@@ -13,13 +13,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Pull Vercel env info
-        run: |
-          echo "VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}" >> $GITHUB_ENV
-          echo "VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}" >> $GITHUB_ENV
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
       - name: Deploy to production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: vercel deploy --prod --yes --token $VERCEL_TOKEN
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::VERCEL_TOKEN or VERCEL_PROJECT_ID not set — skipping CLI deploy."
+            echo "Either set them in repo secrets, or use the deploy-hook workflow instead."
+            echo "See DEPLOY.md for the full setup."
+            exit 0
+          fi
+          npm install -g vercel@latest
+          vercel deploy --prod --yes --token "$VERCEL_TOKEN"
