@@ -73,6 +73,23 @@ const votesToday = () => {
 const remainingVotes = () => Math.max(0, DAILY_VOTE_BUDGET - votesToday());
 const slugify = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Lucide icon library — minimal subset of category icons we use
+const LUCIDE = {
+  'coins':          '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+  'image':          '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  'message-circle': '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  'server':         '<rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>',
+  'wrench':         '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  'arrow-right-left':'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  'smile':          '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  'sparkles':       '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>',
+  'layers':         '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'
+};
+const lucide = (name, size = 13) => {
+  const path = LUCIDE[name] || LUCIDE['sparkles'];
+  return `<svg class="lucide-ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+};
 const fmtUsd = n => {
   if (n == null || isNaN(n)) return '—';
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -365,7 +382,7 @@ function renderCategoryChips() {
     `<button class="chip ${activeCategory === 'all' ? 'active' : ''}" data-cat="all" type="button">All <span class="count">${counts.all}</span></button>`,
     ...data.categories.map(c => `
       <button class="chip ${activeCategory === c.id ? 'active' : ''} ${counts[c.id] === 0 ? 'empty' : ''}" data-cat="${esc(c.id)}" type="button" ${counts[c.id] === 0 ? 'disabled' : ''}>
-        <span class="cat-ico" aria-hidden="true">${esc(c.icon || '')}</span> ${esc(c.label)} <span class="count">${counts[c.id]}</span>
+        <span class="cat-ico" aria-hidden="true">${lucide(c.icon || 'sparkles', 13)}</span> ${esc(c.label)} <span class="count">${counts[c.id]}</span>
       </button>`)
   ];
   bar.innerHTML = chips.join('');
@@ -444,7 +461,7 @@ function renderCard(p, spotlight) {
     <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" title="${c.verified ? 'Verified on-chain: ' + esc(c.verifiedNote || 'name/symbol/decimals confirmed') : 'Click to copy'}" type="button">
       <span class="chain">${esc(c.chain || 'Dogechain')}</span>
       <span class="addr-txt">${esc(truncateAddr(c.address))}${c.symbol ? ` · ${esc(c.symbol)}` : ''}</span>
-      ${c.verified ? `<span class="verified-tick" aria-label="verified on-chain">✓</span>` : ''}
+      ${c.verified ? `<span class="verified-tick" aria-label="verified on-chain"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>` : ''}
     </button>`).join('');
   return `
     <article class="card ${p.pending ? 'pending' : ''} ${spotlight ? 'spotlight' : ''}" data-card="${esc(p.id)}" tabindex="0" role="button" aria-label="Open ${esc(p.name)}">
@@ -457,14 +474,14 @@ function renderCard(p, spotlight) {
           <div class="card-tagline">${esc(p.tagline || '')}</div>
         </div>
       </div>
-      ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico" aria-hidden="true">${esc(cat.icon)}</span> ${esc(cat.label)}</div>` : ''}
+      ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico" aria-hidden="true">${lucide(cat.icon, 11)}</span> ${esc(cat.label)}</div>` : ''}
       <p class="card-desc">${esc(p.description || '')}</p>
       ${p.tags?.length ? `<div class="tags">${p.tags.slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
       ${contracts ? `<div class="contracts">${contracts}</div>` : ''}
       <div class="card-foot">
         <div class="links">${links}</div>
-        <button class="vote ${voted ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${voted}" aria-label="Upvote ${esc(p.name)}">
-          <span class="caret" aria-hidden="true">▲</span>
+        <button class="vote ${voted ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${voted}" aria-label="Vote for ${esc(p.name)}">
+          <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
           <span class="vote-n">${voteCount(p.id)}</span>
         </button>
       </div>
@@ -487,10 +504,10 @@ function renderDetail(p) {
   const cat = categoryDef(p.category);
   const contracts = (p.contracts || []).map(c => `
     <div class="detail-contract">
-      <div class="dc-head"><strong>${esc(c.type || 'contract')}</strong>${c.symbol ? ` · ${esc(c.symbol)}` : ''} <span class="chain-tag">${esc(c.chain || 'Dogechain')}</span>${c.verified ? `<span class="verified-pill" title="${esc(c.verifiedNote || 'Verified via eth_call')}">✓ verified</span>` : ''}</div>
+      <div class="dc-head"><strong>${esc(c.type || 'contract')}</strong>${c.symbol ? ` · ${esc(c.symbol)}` : ''} <span class="chain-tag">${esc(c.chain || 'Dogechain')}</span>${c.verified ? `<span class="verified-pill" title="${esc(c.verifiedNote || 'Verified via eth_call')}"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>verified</span>` : ''}</div>
       <button class="addr ${c.verified ? 'verified' : ''}" data-copy="${esc(c.address)}" type="button">
         <span class="addr-txt">${esc(c.address)}</span>
-        <span class="copy-ico" aria-hidden="true">⧉</span>
+        <svg class="copy-ico" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       </button>
     </div>`).join('') || '<div class="muted">No on-chain contracts listed.</div>';
   const tags = (p.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
@@ -511,7 +528,7 @@ function renderDetail(p) {
       <div class="detail-title">
         <h2 id="detailTitle">${esc(p.name)}</h2>
         <div class="detail-sub">${esc(p.tagline || '')}</div>
-        ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico">${esc(cat.icon)}</span> ${esc(cat.label)}</div>` : ''}
+        ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico">${lucide(cat.icon, 11)}</span> ${esc(cat.label)}</div>` : ''}
       </div>
     </div>
     <p class="detail-desc">${esc(p.description || '')}</p>
@@ -524,8 +541,9 @@ function renderDetail(p) {
     </div>
     <div class="detail-foot">
       <button class="vote lg ${hasVoted(p.id) ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${hasVoted(p.id)}">
-        <span class="caret">▲</span> <span class="vote-n">${voteCount(p.id)}</span>
-        <span class="vote-label">${hasVoted(p.id) ? 'Voted' : 'Upvote'}</span>
+        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+        <span class="vote-n">${voteCount(p.id)}</span>
+        <span class="vote-label">${hasVoted(p.id) ? 'Voted' : 'Vote'}</span>
       </button>
       <button class="btn ghost" data-close type="button">Close</button>
     </div>`;
@@ -656,7 +674,7 @@ function showStaticPage(title, body) {
     host.className = 'static-page';
     document.querySelector('.app').appendChild(host);
   }
-  host.innerHTML = `<div class="static-wrap"><h1>${esc(title)}</h1>${body}<p><a href="#/" class="btn ghost small">← Back to directory</a></p></div>`;
+  host.innerHTML = `<div class="static-wrap"><h1>${esc(title)}</h1>${body}<p><a href="#/" class="btn ghost small"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:4px"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back to directory</a></p></div>`;
   host.scrollIntoView({ behavior: 'smooth' });
   document.getElementById('grid')?.setAttribute('hidden', '');
   document.querySelector('.toolbar')?.setAttribute('hidden', '');
