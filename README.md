@@ -4,7 +4,7 @@
 
 A community-driven, open-source directory of projects, protocols, and people building on the [Dogechain Network](https://dogechain.dog) (chain ID 2000). No accounts. No server. No gatekeepers.
 
-🌐 **Live:** [pulse.dogechain.dog](https://pulse.dogechain.dog) (or wherever it's deployed)
+🌐 **Live:** **[dogechain-pulse.vercel.app](https://dogechain-pulse.vercel.app)** ← deployed and live
 📦 **Data API:** [`data/projects.json`](./data/projects.json) — free, public, versioned
 💻 **Source:** [github.com/DBOT-DC/dogechain-pulse](https://github.com/DBOT-DC/dogechain-pulse)
 
