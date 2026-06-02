@@ -36,12 +36,20 @@
   <link rel="canonical" href="https://www.dbot.dog/dogechain-pulse/" />
 
   <title>Dogechain Pulse — discover the network</title>
+  <!-- Runtime <base> tag: inlined so the base is set synchronously BEFORE any
+       <link rel="stylesheet"> or <script src> is parsed. The same code lives
+       in base-href.js for dev convenience. -->
+  <script>
+    (function () {
+      var path = location.pathname || '/';
+      var segments = path.replace(/^\/+/, '').split('/').filter(Boolean);
+      var baseHref = segments.length === 0 ? './' : '/' + segments[0] + '/';
+      var b = document.createElement('base');
+      b.href = baseHref;
+      document.head.appendChild(b);
+    })();
+  </script>
   <link rel="stylesheet" href="./styles.css" />
-  <!-- Runtime <base> tag: this makes all relative URLs (./app.js, ./styles.css,
-       ./icon.svg, fetch('./data/projects.json')) resolve correctly whether the
-       site is served from the apex (dogechain-pulse.vercel.app/) or from a
-       path prefix (www.dbot.dog/dogechain-pulse/). See base-href.js. -->
-  <script src="./base-href.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
