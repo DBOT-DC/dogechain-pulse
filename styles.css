@@ -695,50 +695,92 @@ dialog[open]::backdrop { animation: backdropIn 0.25s var(--ease-out) both; }
 }
 .static-page .back-link:hover { color: var(--text); }
 
-/* ─── Inline accordion (About / Methodology / Stats) ──────────── */
-.acc { max-width: 960px; margin: 28px auto 0; display: flex; flex-direction: column; gap: 8px; }
-.acc-item {
-  background: var(--bg-2); border: 1px solid var(--line);
-  border-radius: 10px; overflow: hidden;
-  transition: border-color .18s ease;
+/* ─── Resources rail (inline About / Methodology / Stats) ─────────
+   Three teaser cards in a row, then expandable panels below.
+   Lives between the catbar and the project grid.
+*/
+.res { max-width: 1180px; margin: 4px auto 14px; }
+.res-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.acc-item:hover { border-color: var(--line-3); }
-.acc-item[open] { border-color: var(--accent); }
-.acc-head {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 18px; cursor: pointer; user-select: none;
-  list-style: none;
+.res-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
 }
-.acc-head::-webkit-details-marker { display: none; }
-.acc-icon { display: inline-flex; color: var(--accent); flex-shrink: 0; }
-.acc-icon svg { display: block; }
-.acc-title { font-size: 15px; font-weight: 600; color: var(--text); }
-.acc-sub   { font-size: 12px; color: var(--text-dim); margin-left: 4px; }
-.acc-spacer { flex: 1; }
-.acc-chev  { color: var(--text-dim); transition: transform .25s ease, color .18s ease; display: inline-flex; }
-.acc-chev svg { display: block; }
-.acc-item[open] .acc-chev { transform: rotate(180deg); color: var(--accent); }
-/* grid-template-rows trick for proper max-height animation */
-.acc-body {
-  display: grid; grid-template-rows: 0fr;
-  transition: grid-template-rows .28s ease;
+.res-card:hover {
+  border-color: var(--line-3);
+  background: var(--bg-3);
 }
-.acc-item[open] .acc-body { grid-template-rows: 1fr; }
-.acc-body > .acc-inner { overflow: hidden; }
-.acc-inner-pad { padding: 0 18px 18px; }
-.acc-inner-pad h2 { font-size: 15px; font-weight: 600; margin: 14px 0 8px; color: var(--text); }
-.acc-inner-pad h2:first-child { margin-top: 0; }
-.acc-inner-pad p, .acc-inner-pad li { color: var(--text-dim); line-height: 1.65; font-size: 13px; }
-.acc-inner-pad ul, .acc-inner-pad ol { padding-left: 20px; }
-.acc-inner-pad hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0 6px; }
-.acc-gotit {
+.res-card.open {
+  border-color: var(--accent);
+  background: var(--bg-3);
+}
+.res-icon { display: inline-flex; color: var(--accent); flex-shrink: 0; }
+.res-icon svg { display: block; }
+.res-text { flex: 1; min-width: 0; }
+.res-title {
+  margin: 0; font-size: 13.5px; font-weight: 600;
+  color: var(--text); letter-spacing: -0.005em;
+}
+.res-sub {
+  margin: 2px 0 0; font-size: 11.5px;
+  color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.res-chev {
+  color: var(--text-dim); flex-shrink: 0;
+  transition: transform .25s ease, color .18s ease;
+  display: inline-flex;
+}
+.res-chev svg { display: block; }
+.res-card.open .res-chev { transform: rotate(180deg); color: var(--accent); }
+
+/* Panels row — only the active one is visible. */
+.res-panels { position: relative; margin-top: 8px; }
+.res-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  /* Fluid height animation via grid-template-rows trick */
+  display: grid; grid-template-rows: 1fr;
+  animation: resPanelIn .28s ease;
+  overflow: hidden;
+}
+.res-panel[hidden] { display: none; }
+@keyframes resPanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.res-panel-inner {
+  /* Reserve a bit of room — list/heading spacing inside */
+  padding: 16px 18px 18px;
+  min-height: 0;
+}
+.res-panel-inner p, .res-panel-inner li { color: var(--text-dim); line-height: 1.65; font-size: 13px; }
+.res-panel-inner h2 {
+  font-size: 14px; font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--text);
+}
+.res-panel-inner h2:first-child { margin-top: 0; }
+.res-panel-inner ul, .res-panel-inner ol { padding-left: 20px; }
+.res-panel-inner strong { color: var(--text); }
+.res-gotit {
   display: inline-flex; align-items: center; gap: 6px;
   margin-top: 14px; padding: 7px 14px; font-size: 12px; font-weight: 600;
   color: var(--bg); background: var(--accent);
   border: 0; border-radius: 6px; cursor: pointer;
   transition: opacity .15s ease;
 }
-.acc-gotit:hover { opacity: .85; }
+.res-gotit:hover { opacity: .85; }
 
 /* ─── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
@@ -749,6 +791,7 @@ dialog[open]::backdrop { animation: backdropIn 0.25s var(--ease-out) both; }
   .modal .row { grid-template-columns: 1fr; }
   .foot { flex-direction: column; align-items: flex-start; }
   .foot-links { flex-wrap: wrap; }
+  .res-cards { grid-template-columns: 1fr; }
 }
 
 /* ─── Reduced motion ────────────────────────────────────────────── */

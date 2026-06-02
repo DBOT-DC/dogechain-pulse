@@ -962,31 +962,38 @@ function handleRoute() {
   }
 }
 
-// ─── Accordion (inline About / Methodology / Stats) ─────────────────
-function renderAccordion() {
+// ─── Resources rail (inline About / Methodology / Stats) ───────────
+// Three teaser cards in a row that sit between the stats bar and the
+// project grid. Clicking a card expands a panel of rich content below
+// the row (one open at a time, fluid height animation).
+function renderResourcesRail() {
   const items = [
-    { id: 'about',        icon: 'info-circle',  title: 'About',        sub: 'Community-curated directory of Dogechain projects',  body: aboutContent() },
-    { id: 'methodology',  icon: 'book-open',    title: 'Methodology',  sub: 'How projects get listed, verified, and voted on',   body: methodologyContent() },
-    { id: 'stats',        icon: 'bar-chart-3',  title: 'Stats',        sub: 'Network metrics, refresh cadence, and data sources', body: statsContent() },
+    { id: 'about',        icon: 'info-circle',  title: 'About',        sub: 'Community-curated directory of Dogechain projects',   body: aboutContent()        },
+    { id: 'methodology',  icon: 'book-open',    title: 'Methodology',  sub: 'How projects get listed, verified, and voted on',   body: methodologyContent()  },
+    { id: 'stats',        icon: 'bar-chart-3',  title: 'Stats',        sub: 'Network metrics, refresh cadence, and data sources', body: statsContent()        },
   ];
-  return `<section class="acc" aria-label="About, methodology, and stats">${
-    items.map(it => `
-      <details class="acc-item" id="acc-${it.id}">
-        <summary class="acc-head">
-          <span class="acc-icon">${lucide(it.icon, 16)}</span>
-          <span class="acc-title">${it.title}</span>
-          <span class="acc-sub">— ${it.sub}</span>
-          <span class="acc-spacer"></span>
-          <span class="acc-chev">${lucide('chevron-down', 16)}</span>
-        </summary>
-        <div class="acc-body"><div class="acc-inner">
-          <div class="acc-inner-pad">
-            <hr>${it.body}
-            <button type="button" class="acc-gotit" data-acc-close="${it.id}">Got it</button>
+  return `<section class="res" aria-label="About, methodology, and stats">
+    <div class="res-cards">${
+      items.map(it => `
+        <article class="res-card" data-res-id="${it.id}">
+          <span class="res-icon">${lucide(it.icon, 18)}</span>
+          <div class="res-text">
+            <h3 class="res-title">${it.title}</h3>
+            <p class="res-sub">${it.sub}</p>
           </div>
-        </div></div>
-      </details>`).join('')
-  }</section>`;
+          <span class="res-chev">${lucide('chevron-down', 16)}</span>
+        </article>`).join('')
+    }</div>
+    <div class="res-panels">${
+      items.map(it => `
+        <div class="res-panel" data-res-panel="${it.id}" hidden>
+          <div class="res-panel-inner">
+            ${it.body}
+            <button type="button" class="res-gotit" data-res-close="${it.id}">Got it</button>
+          </div>
+        </div>`).join('')
+    }</div>
+  </section>`;
 }
 
 function aboutContent() {
@@ -1123,20 +1130,49 @@ async function init() {
   renderGrid();
   handleRoute();
 
-  // Inline accordion (About / Methodology / Stats) — sits between grid and footer
-  const _foot = document.querySelector('.app > .foot');
-  if (_foot) {
-    const _acc = document.createElement('div');
-    _acc.innerHTML = renderAccordion();
-    while (_acc.firstChild) _foot.parentNode.insertBefore(_acc.firstChild, _foot);
+  // Resources rail (About / Methodology / Stats) — sits between catbar and grid
+  // so visitors encounter it at the start of the directory, not buried below.
+  const _grid = document.getElementById('grid');
+  if (_grid) {
+    const _res = document.createElement('div');
+    _res.innerHTML = renderResourcesRail();
+    while (_res.firstChild) _grid.parentNode.insertBefore(_res.firstChild, _grid);
+    // Children were moved out of _res into the document. Re-query the rail
+    // (the <section> we just inserted before #grid) to wire up listeners.
+    const rail = _grid.previousElementSibling;
+    if (rail) {
+      // Wire up card → panel toggle (one panel open at a time)
+      rail.querySelectorAll('.res-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.dataset.resId;
+          const panel = rail.querySelector(`[data-res-panel="${id}"]`);
+          if (!panel) return;
+          const wasOpen = !panel.hidden;
+          // Close all panels and clear all card states
+          rail.querySelectorAll('.res-panel').forEach(p => p.hidden = true);
+          rail.querySelectorAll('.res-card').forEach(c => c.classList.remove('open'));
+          if (!wasOpen) {
+            panel.hidden = false;
+            card.classList.add('open');
+            requestAnimationFrame(() => {
+              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+          }
+        });
+      });
+      // "Got it" button → close panel, collapse card state, smooth-scroll up
+      rail.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-res-close]');
+        if (!t) return;
+        const id = t.dataset.resClose;
+        const panel = rail.querySelector(`[data-res-panel="${id}"]`);
+        const card  = rail.querySelector(`.res-card[data-res-id="${id}"]`);
+        if (panel) panel.hidden = true;
+        if (card)  card.classList.remove('open');
+        if (card)  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
-  // "Got it" button → collapse the panel and smooth-scroll to it
-  document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-acc-close]');
-    if (!t) return;
-    const det = document.getElementById('acc-' + t.dataset.accClose);
-    if (det) { det.open = false; det.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
 
   // Cross-tab sync: writes to any pulse:* key in another tab fire 'storage' here.
   // The writing tab does NOT receive this event, so no loop risk.
