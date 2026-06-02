@@ -1,0 +1,655 @@
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════
+//  Dogechain Pulse — community-driven project directory
+//  Loads projects.json, renders directory, handles votes (local),
+//  search/filter, submit-a-project, shareable routes.
+// ═══════════════════════════════════════════════════════════════════
+
+const DATA_URL = './data/projects.json';
+const VOTE_KEY = 'pulse:votes:v1';
+const SUBMIT_KEY = 'pulse:submissions:v1';
+const DAILY_VOTE_BUDGET = 30;
+const REFRESH_BLOCK_MS = 30_000;
+
+let data = null;
+let votes = loadVotes();
+let submissions = loadSubmissions();
+let activeCategory = 'all';
+let searchQuery = '';
+let sortBy = 'votes';
+let blockTimer = null;
+
+// ─── Persistence ───────────────────────────────────────────────────
+function loadVotes() {
+  try { return JSON.parse(localStorage.getItem(VOTE_KEY) || '{}'); } catch { return {}; }
+}
+function saveVotes() {
+  try { localStorage.setItem(VOTE_KEY, JSON.stringify(votes)); } catch {}
+}
+function loadSubmissions() {
+  try { return JSON.parse(localStorage.getItem(SUBMIT_KEY) || '[]'); } catch { return []; }
+}
+function saveSubmissions() {
+  try { localStorage.setItem(SUBMIT_KEY, JSON.stringify(submissions)); } catch {}
+}
+
+// ─── Time / format helpers ─────────────────────────────────────────
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const votesToday = () => {
+  const k = todayKey();
+  let n = 0;
+  for (const id of Object.keys(votes)) {
+    const v = votes[id];
+    if (v && v.daily && v.daily[k]) n += Object.keys(v.daily[k]).length;
+  }
+  return n;
+};
+const remainingVotes = () => Math.max(0, DAILY_VOTE_BUDGET - votesToday());
+const slugify = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtUsd = n => {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+  return `$${Math.round(n)}`;
+};
+const fmtNum = n => {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return String(Math.round(n));
+};
+const truncateAddr = a => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '';
+const relTime = iso => {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  const days = Math.floor((Date.now() - t) / 86400000);
+  if (days < 1) return 'today';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+};
+const debounce = (fn, ms = 200) => {
+  let t = null;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+};
+
+// ─── Toast ─────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, kind = '') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = `toast show ${kind}`.trim();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = `toast ${kind}`.trim(); }, 2400);
+}
+
+// ─── Data access ───────────────────────────────────────────────────
+function allProjects() {
+  if (!data) return [];
+  return [...data.projects, ...submissions];
+}
+function projectById(id) {
+  return allProjects().find(p => p.id === id);
+}
+function categoryDef(id) {
+  return data?.categories.find(c => c.id === id);
+}
+
+// ─── Voting ────────────────────────────────────────────────────────
+function voteFor(id) {
+  if (!projectById(id)) return;
+  const k = todayKey();
+  if (!votes[id]) votes[id] = { daily: {} };
+  if (!votes[id].daily[k]) votes[id].daily[k] = {};
+  const day = votes[id].daily[k];
+  if (day[id]) {
+    delete day[id];
+  } else {
+    if (votesToday() >= DAILY_VOTE_BUDGET) {
+      showToast(`Daily vote budget reached (${DAILY_VOTE_BUDGET})`, 'warn');
+      return;
+    }
+    day[id] = Date.now();
+  }
+  saveVotes();
+  renderGrid();
+  renderStats();
+}
+function voteCount(id) {
+  let n = 0;
+  for (const day of Object.values(votes[id]?.daily || {})) n += Object.keys(day).length;
+  const p = projectById(id);
+  if (p && p.pending) n += 0; // pending doesn't get baseline
+  return n + (p?.votes || 0);
+}
+function hasVoted(id) {
+  const k = todayKey();
+  return !!(votes[id]?.daily?.[k]?.[id]);
+}
+
+// ─── Submission (local-only, also offers GitHub issue path) ─────────
+function submitProject(form) {
+  const fd = new FormData(form);
+  const name = (fd.get('name') || '').toString().trim();
+  if (!name) return false;
+  const baseId = slugify(name);
+  let id = baseId;
+  let n = 2;
+  while (projectById(id)) id = `${baseId}-${n++}`;
+  const cat = (fd.get('category') || '').toString();
+  const sub = {
+    id,
+    name,
+    tagline: (fd.get('tagline') || '').toString().slice(0, 80),
+    description: (fd.get('description') || '').toString().slice(0, 400),
+    category: cat,
+    logo: '🪙',
+    color: '#8a8a8a',
+    website: (fd.get('website') || '').toString().trim() || null,
+    twitter: normalizeTwitter((fd.get('twitter') || '').toString().trim()) || null,
+    telegram: (fd.get('telegram') || '').toString().trim() || null,
+    github: null,
+    contracts: fd.get('contract') ? [{ chain: 'Dogechain', type: 'token', address: (fd.get('contract') || '').toString().trim(), symbol: '' }] : [],
+    metrics: null,
+    tags: ['community-submitted'],
+    addedAt: new Date().toISOString(),
+    addedBy: (fd.get('submitter') || '').toString().trim() || 'pulse-submission',
+    featured: false,
+    pending: true
+  };
+  submissions.push(sub);
+  saveSubmissions();
+  return sub;
+}
+function normalizeTwitter(v) {
+  if (!v) return null;
+  if (v.startsWith('http')) return v;
+  if (v.startsWith('@')) return `https://x.com/${v.slice(1)}`;
+  return `https://x.com/${v}`;
+}
+function buildGitHubIssueUrl(sub) {
+  const params = new URLSearchParams({
+    title: `[Pulse] Submit: ${sub.name}`,
+    labels: 'pulse-submission',
+    template: 'pulse-submission.md',
+    name: sub.name,
+    tagline: sub.tagline,
+    description: sub.description || '(none)',
+    category: sub.category,
+    website: sub.website || '',
+    twitter: sub.twitter || '',
+    telegram: sub.telegram || '',
+    contracts: (sub.contracts || []).map(c => `${c.chain}:${c.address}${c.symbol ? ` (${c.symbol})` : ''}`).join(', ') || '',
+    submitter: sub.addedBy
+  });
+  return `https://github.com/DBOT-DC/dogechain-pulse/issues/new?${params.toString()}`;
+}
+
+// ─── Render: stats ─────────────────────────────────────────────────
+function renderStats() {
+  const bar = document.getElementById('statsBar');
+  if (!bar || !data) return;
+  const projects = allProjects();
+  const cats = new Set(projects.map(p => p.category).filter(Boolean));
+  const tvl = projects.reduce((s, p) => s + (p.metrics?.tvlUsd || 0), 0);
+  const totalVotes = projects.reduce((s, p) => s + voteCount(p.id), 0);
+  const stats = [
+    { label: 'Projects listed', value: fmtNum(projects.length) },
+    { label: 'Categories', value: fmtNum(cats.size) },
+    { label: 'Total DeFi TVL', value: fmtUsd(tvl) },
+    { label: 'Community votes', value: fmtNum(totalVotes) },
+    { label: 'Daily votes left', value: fmtNum(remainingVotes()) }
+  ];
+  bar.innerHTML = stats.map(s => `
+    <div class="stat">
+      <div class="stat-value" data-stat="${s.label.toLowerCase().replace(/[^a-z]+/g, '-')}">${esc(s.value)}</div>
+      <div class="stat-label">${esc(s.label)}</div>
+    </div>
+  `).join('') + `<div class="stat" id="blockStat">
+      <div class="stat-value" data-stat="latest-block">…</div>
+      <div class="stat-label">Latest block</div>
+    </div>`;
+  refreshBlock();
+}
+
+// ─── Render: category chips ────────────────────────────────────────
+function renderCategoryChips() {
+  const bar = document.getElementById('catBar');
+  if (!bar || !data) return;
+  const counts = { all: allProjects().length };
+  for (const c of data.categories) counts[c.id] = 0;
+  for (const p of allProjects()) {
+    if (counts[p.category] != null) counts[p.category]++;
+  }
+  const chips = [
+    `<button class="chip ${activeCategory === 'all' ? 'active' : ''}" data-cat="all" type="button">All <span class="count">${counts.all}</span></button>`,
+    ...data.categories.map(c => `
+      <button class="chip ${activeCategory === c.id ? 'active' : ''} ${counts[c.id] === 0 ? 'empty' : ''}" data-cat="${esc(c.id)}" type="button" ${counts[c.id] === 0 ? 'disabled' : ''}>
+        <span class="cat-ico" aria-hidden="true">${esc(c.icon || '')}</span> ${esc(c.label)} <span class="count">${counts[c.id]}</span>
+      </button>`)
+  ];
+  bar.innerHTML = chips.join('');
+  bar.querySelectorAll('.chip').forEach(b => {
+    b.addEventListener('click', () => {
+      activeCategory = b.dataset.cat;
+      bar.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x === b));
+      renderGrid();
+    });
+  });
+}
+
+// ─── Render: project grid ──────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  if (!grid || !data) return;
+  let filtered = allProjects();
+  if (activeCategory !== 'all') filtered = filtered.filter(p => p.category === activeCategory);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(p => {
+      const hay = [
+        p.name, p.tagline, p.description, ...(p.tags || []),
+        ...(p.contracts || []).map(c => `${c.address} ${c.symbol || ''}`),
+        categoryDef(p.category)?.label || ''
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  if (sortBy === 'votes') filtered.sort((a, b) => voteCount(b.id) - voteCount(a.id));
+  else if (sortBy === 'newest') filtered.sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+  else if (sortBy === 'az') filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty"><h3>No projects match.</h3><p>Try a different search or category. Or <button class="btn primary inline" id="emptySubmit" type="button">submit a new project</button>.</p></div>`;
+    const btn = document.getElementById('emptySubmit');
+    if (btn) btn.addEventListener('click', openSubmitModal);
+    return;
+  }
+
+  const spotlightId = (() => {
+    if (sortBy !== 'votes') return null;
+    const top = [...filtered].sort((a, b) => voteCount(b.id) - voteCount(a.id))[0];
+    return top && voteCount(top.id) > 0 ? top.id : null;
+  })();
+
+  grid.innerHTML = filtered.map(p => renderCard(p, p.id === spotlightId)).join('');
+  grid.querySelectorAll('[data-card]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('a, button')) return;
+      openDetail(el.dataset.card);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(el.dataset.card); }
+    });
+  });
+  grid.querySelectorAll('[data-vote]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); voteFor(btn.dataset.vote); });
+  });
+  grid.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); copyAddr(btn.dataset.copy); });
+  });
+}
+
+function renderCard(p, spotlight) {
+  const cat = categoryDef(p.category);
+  const voted = hasVoted(p.id);
+  const links = [
+    p.website && linkBtn('web', p.website, 'Website'),
+    p.twitter && linkBtn('x', p.twitter, 'X / Twitter'),
+    p.telegram && linkBtn('tg', p.telegram, 'Telegram'),
+    p.discord && linkBtn('dc', p.discord, 'Discord'),
+    p.github && linkBtn('gh', p.github, 'GitHub')
+  ].filter(Boolean).join('');
+  const contracts = (p.contracts || []).slice(0, 2).map(c => `
+    <button class="addr" data-copy="${esc(c.address)}" title="Click to copy" type="button">
+      <span class="chain">${esc(c.chain || 'Dogechain')}</span>
+      <span class="addr-txt">${esc(truncateAddr(c.address))}${c.symbol ? ` · ${esc(c.symbol)}` : ''}</span>
+    </button>`).join('');
+  return `
+    <article class="card ${p.pending ? 'pending' : ''} ${spotlight ? 'spotlight' : ''}" data-card="${esc(p.id)}" tabindex="0" role="button" aria-label="Open ${esc(p.name)}">
+      ${spotlight ? `<div class="spotlight-badge">★ Today's spotlight</div>` : ''}
+      ${p.pending ? `<div class="pending-badge">⏳ Pending</div>` : ''}
+      <div class="card-head">
+        <div class="card-logo" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.logo || '🪙')}</div>
+        <div class="card-title">
+          <h2>${esc(p.name)}</h2>
+          <div class="card-tagline">${esc(p.tagline || '')}</div>
+        </div>
+      </div>
+      ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico" aria-hidden="true">${esc(cat.icon)}</span> ${esc(cat.label)}</div>` : ''}
+      <p class="card-desc">${esc(p.description || '')}</p>
+      ${p.tags?.length ? `<div class="tags">${p.tags.slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      ${contracts ? `<div class="contracts">${contracts}</div>` : ''}
+      <div class="card-foot">
+        <div class="links">${links}</div>
+        <button class="vote ${voted ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${voted}" aria-label="Upvote ${esc(p.name)}">
+          <span class="caret" aria-hidden="true">▲</span>
+          <span class="vote-n">${voteCount(p.id)}</span>
+        </button>
+      </div>
+    </article>`;
+}
+
+function linkBtn(kind, url, label) {
+  const icons = {
+    web: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>',
+    x:   '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18 3h3l-7.5 8.6L22 21h-6.8l-5.3-6.6L4 21H1l8-9.2L1 3h7l4.8 6L18 3z"/></svg>',
+    tg:  '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M9.5 14.5l-.4 4c.5 0 .7-.2 1-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3-14c.3-1.2-.4-1.7-1.3-1.4L1.7 9.5c-1.2.5-1.1 1.1-.2 1.4l4.6 1.4L16.7 4.6c.5-.3 1-.2.6.2"/></svg>',
+    dc:  '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 5a3 3 0 00-3-3H8a3 3 0 00-3 3v14a3 3 0 003 3h8a3 3 0 003-3V5zM8 4h8a1 1 0 011 1v3H7V5a1 1 0 011-1zm0 16a1 1 0 01-1-1v-9h10v9a1 1 0 01-1 1H8z"/></svg>',
+    gh:  '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 1.5a10.5 10.5 0 00-3.3 20.5c.5.1.7-.2.7-.5v-2c-3 .7-3.6-1.3-3.6-1.3-.5-1.3-1.2-1.6-1.2-1.6-1-.6.1-.6.1-.6 1 .1 1.6 1.1 1.6 1.1 1 1.6 2.4 1.2 3 .9.1-.7.4-1.2.6-1.5-2.4-.3-4.9-1.2-4.9-5.3 0-1.2.4-2.1 1.1-2.8-.1-.3-.5-1.4.1-2.8 0 0 .9-.3 3 1.1a10 10 0 015.5 0c2.1-1.4 3-1.1 3-1.1.6 1.4.2 2.5.1 2.8.7.7 1.1 1.6 1.1 2.8 0 4.1-2.5 5-4.9 5.3.4.3.7 1 .7 2v3c0 .3.2.6.7.5A10.5 10.5 0 0012 1.5z"/></svg>'
+  };
+  return `<a class="iconlink" href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(label)}">${icons[kind] || icons.web}</a>`;
+}
+
+// ─── Render: detail modal ──────────────────────────────────────────
+function renderDetail(p) {
+  const cat = categoryDef(p.category);
+  const contracts = (p.contracts || []).map(c => `
+    <div class="detail-contract">
+      <div class="dc-head"><strong>${esc(c.type || 'contract')}</strong>${c.symbol ? ` · ${esc(c.symbol)}` : ''} <span class="chain-tag">${esc(c.chain || 'Dogechain')}</span></div>
+      <button class="addr" data-copy="${esc(c.address)}" type="button">
+        <span class="addr-txt">${esc(c.address)}</span>
+        <span class="copy-ico" aria-hidden="true">⧉</span>
+      </button>
+    </div>`).join('') || '<div class="muted">No on-chain contracts listed.</div>';
+  const tags = (p.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+  const m = p.metrics || {};
+  const metrics = (m.tvlUsd != null || m.volume24hUsd != null || m.holders != null) ? `
+    <div class="detail-metrics">
+      ${m.tvlUsd != null ? `<div><div class="m-value">${esc(fmtUsd(m.tvlUsd))}</div><div class="m-label">TVL</div></div>` : ''}
+      ${m.volume24hUsd != null ? `<div><div class="m-value">${esc(fmtUsd(m.volume24hUsd))}</div><div class="m-label">24h volume</div></div>` : ''}
+      ${m.holders != null ? `<div><div class="m-value">${esc(fmtNum(m.holders))}</div><div class="m-label">Holders</div></div>` : ''}
+    </div>` : '';
+  const links = [p.website, p.twitter, p.telegram, p.discord, p.github].filter(Boolean).map((u, i) => {
+    const labels = ['Website', 'X / Twitter', 'Telegram', 'Discord', 'GitHub'];
+    return `<a class="btn ghost small" href="${esc(u)}" target="_blank" rel="noopener">${esc(labels[i] || 'Link')} ↗</a>`;
+  }).join('');
+  return `
+    <div class="detail-head">
+      <div class="logo-lg" style="background:${esc(p.color || '#1c1f26')}22; border-color:${esc(p.color || '#262a33')}">${esc(p.logo || '🪙')}</div>
+      <div class="detail-title">
+        <h2 id="detailTitle">${esc(p.name)}</h2>
+        <div class="detail-sub">${esc(p.tagline || '')}</div>
+        ${cat ? `<div class="card-cat" style="--cat-color:${esc(cat.color || '#888')}"><span class="cat-ico">${esc(cat.icon)}</span> ${esc(cat.label)}</div>` : ''}
+      </div>
+    </div>
+    <p class="detail-desc">${esc(p.description || '')}</p>
+    ${metrics}
+    <div class="section"><h3>Contracts</h3>${contracts}</div>
+    ${tags ? `<div class="section"><h3>Tags</h3><div class="tags">${tags}</div></div>` : ''}
+    <div class="section"><h3>Links</h3><div class="links-row">${links || '<div class="muted">No links listed.</div>'}</div></div>
+    <div class="section detail-meta">
+      <span class="muted">Added ${esc(relTime(p.addedAt))}${p.addedBy ? ` · ${esc(p.addedBy)}` : ''}${p.pending ? ' · pending verification' : ''}</span>
+    </div>
+    <div class="detail-foot">
+      <button class="vote lg ${hasVoted(p.id) ? 'voted' : ''}" data-vote="${esc(p.id)}" type="button" aria-pressed="${hasVoted(p.id)}">
+        <span class="caret">▲</span> <span class="vote-n">${voteCount(p.id)}</span>
+        <span class="vote-label">${hasVoted(p.id) ? 'Voted' : 'Upvote'}</span>
+      </button>
+      <button class="btn ghost" data-close type="button">Close</button>
+    </div>`;
+}
+
+function openDetail(id) {
+  const p = projectById(id);
+  if (!p) return;
+  const dlg = document.getElementById('detailModal');
+  document.getElementById('detailBody').innerHTML = renderDetail(p);
+  wireDetailHandlers(p);
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+  else dlg.setAttribute('open', '');
+  history.replaceState(null, '', `#/project/${encodeURIComponent(id)}`);
+  document.getElementById('detailBody').querySelector('[data-close]')?.focus();
+}
+function closeDetail() {
+  const dlg = document.getElementById('detailModal');
+  if (typeof dlg.close === 'function') dlg.close();
+  else dlg.removeAttribute('open');
+  if (location.hash.startsWith('#/project/')) history.replaceState(null, '', '#/');
+}
+function wireDetailHandlers(p) {
+  document.getElementById('detailBody').querySelectorAll('[data-copy]').forEach(b => {
+    b.addEventListener('click', () => copyAddr(b.dataset.copy));
+  });
+  document.getElementById('detailBody').querySelectorAll('[data-vote]').forEach(b => {
+    b.addEventListener('click', () => { voteFor(p.id); openDetail(p.id); });
+  });
+  document.getElementById('detailBody').querySelectorAll('[data-close]').forEach(b => {
+    b.addEventListener('click', closeDetail);
+  });
+}
+
+function copyAddr(addr) {
+  if (!addr) return;
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(addr).then(
+      () => showToast('Copied to clipboard', 'ok'),
+      () => fallbackCopy(addr)
+    );
+  } else {
+    fallbackCopy(addr);
+  }
+}
+function fallbackCopy(addr) {
+  const ta = document.createElement('textarea');
+  ta.value = addr;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('Copied to clipboard', 'ok'); }
+  catch { showToast('Copy failed — long-press to copy', 'warn'); }
+  document.body.removeChild(ta);
+}
+
+// ─── Submit modal ──────────────────────────────────────────────────
+function openSubmitModal() {
+  const dlg = document.getElementById('submitModal');
+  // Populate category options
+  const sel = dlg.querySelector('select[name="category"]');
+  if (sel && data && !sel.dataset.populated) {
+    sel.innerHTML = '<option value="">Choose one…</option>' + data.categories.map(c =>
+      `<option value="${esc(c.id)}">${esc(c.icon)} ${esc(c.label)}</option>`
+    ).join('');
+    sel.dataset.populated = '1';
+  }
+  if (typeof dlg.showModal === 'function') dlg.showModal();
+  else dlg.setAttribute('open', '');
+  dlg.querySelector('input[name="name"]')?.focus();
+}
+function closeSubmitModal() {
+  const dlg = document.getElementById('submitModal');
+  if (typeof dlg.close === 'function') dlg.close();
+  else dlg.removeAttribute('open');
+  dlg.querySelector('form')?.reset();
+}
+
+// ─── Live block height ─────────────────────────────────────────────
+async function refreshBlock() {
+  const el = document.querySelector('[data-stat="latest-block"]');
+  if (!el) return;
+  const endpoints = [
+    'https://rpc.dogechain.dog',
+    'https://dogechain-rpc.publicnode.com'
+  ];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 })
+      });
+      if (!res.ok) continue;
+      const j = await res.json();
+      if (j?.result) {
+        const n = parseInt(j.result, 16);
+        el.textContent = fmtNum(n);
+        return;
+      }
+    } catch {}
+  }
+  el.textContent = '—';
+}
+
+// ─── Routes (hash-based) ───────────────────────────────────────────
+function handleRoute() {
+  const h = location.hash || '';
+  if (h.startsWith('#/project/')) {
+    const id = decodeURIComponent(h.replace('#/project/', ''));
+    if (data && projectById(id)) openDetail(id);
+  } else if (h === '#/about') {
+    showStaticPage('About', aboutContent());
+  } else if (h === '#/methodology') {
+    showStaticPage('Methodology', methodologyContent());
+  } else if (h === '#/stats') {
+    showStaticPage('Stats', statsContent());
+  } else {
+    closeStaticPage();
+  }
+}
+function showStaticPage(title, body) {
+  let host = document.getElementById('staticPage');
+  if (!host) {
+    host = document.createElement('section');
+    host.id = 'staticPage';
+    host.className = 'static-page';
+    document.querySelector('.app').appendChild(host);
+  }
+  host.innerHTML = `<div class="static-wrap"><h1>${esc(title)}</h1>${body}<p><a href="#/" class="btn ghost small">← Back to directory</a></p></div>`;
+  host.scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('grid')?.setAttribute('hidden', '');
+  document.querySelector('.toolbar')?.setAttribute('hidden', '');
+  document.querySelector('.catbar')?.setAttribute('hidden', '');
+}
+function closeStaticPage() {
+  const host = document.getElementById('staticPage');
+  if (host) host.remove();
+  document.getElementById('grid')?.removeAttribute('hidden');
+  document.querySelector('.toolbar')?.removeAttribute('hidden');
+  document.querySelector('.catbar')?.removeAttribute('hidden');
+}
+function aboutContent() {
+  return `
+    <p><strong>Dogechain Pulse</strong> is a community-curated directory of projects, protocols, and people building on the <a href="https://dogechain.dog" target="_blank" rel="noopener">Dogechain Network</a>. It's open source, has no accounts, and no server. The data is a single JSON file in the GitHub repo that anyone can read, fork, or submit to.</p>
+    <h2>What it does</h2>
+    <ul>
+      <li><strong>Directory</strong> — every project gets a card with contracts, socials, and metrics</li>
+      <li><strong>Upvotes</strong> — the community decides what gets the daily spotlight</li>
+      <li><strong>Submissions</strong> — anyone can submit a project; it goes live immediately with a "pending" badge and is verified through community upvotes</li>
+      <li><strong>Live data</strong> — the latest Dogechain block is fetched fresh every 30 seconds</li>
+    </ul>
+    <h2>Who runs it</h2>
+    <p>Built and maintained by <a href="https://dbot.dog" target="_blank" rel="noopener">DBOT</a> — the Dogechain community agent. Source on <a href="https://github.com/DBOT-DC/dogechain-pulse" target="_blank" rel="noopener">GitHub</a>. The canonical data file is at <a href="https://github.com/DBOT-DC/dogechain-pulse/blob/main/data/projects.json" target="_blank" rel="noopener"><code>data/projects.json</code></a> and is a free public read-only API.</p>`;
+}
+function methodologyContent() {
+  return `
+    <h2>How projects get listed</h2>
+    <ol>
+      <li><strong>Seeded</strong> — initial 9 projects are hand-curated by DBOT based on on-chain activity, public socials, and Dogechain ecosystem relevance.</li>
+      <li><strong>Submitted</strong> — anyone can submit a project via the form. It appears immediately with a "pending" badge.</li>
+      <li><strong>Verified</strong> — pending projects graduate when community upvotes push them past the spotlight threshold (10+ votes).</li>
+      <li><strong>Pruned</strong> — projects with no socials, broken contracts, or no on-chain activity for 90+ days get removed in the next data refresh.</li>
+    </ol>
+    <h2>Voting</h2>
+    <p>Votes are stored in your browser's <code>localStorage</code>. Each browser gets 30 votes per day to prevent spam. We don't track who you are. We're exploring wallet-signed voting in v1.5 to remove the daily budget.</p>
+    <h2>Data freshness</h2>
+    <ul>
+      <li><strong>Project cards</strong> — verified weekly by DBOT against the Dogechain RPC and public APIs.</li>
+      <li><strong>TVL / 24h volume</strong> — pulled from DefiLlama and GeckoTerminal daily.</li>
+      <li><strong>Latest block</strong> — fetched live from the Dogechain RPC, refreshed every 30 seconds.</li>
+    </ul>`;
+}
+function statsContent() {
+  const ps = allProjects();
+  const byCat = {};
+  for (const p of ps) byCat[p.category] = (byCat[p.category] || 0) + 1;
+  return `
+    <p>Live ecosystem data as of ${esc(new Date().toISOString().slice(0, 16).replace('T', ' '))} UTC.</p>
+    <h2>By category</h2>
+    <ul>
+      ${data.categories.map(c => `<li><strong>${esc(c.icon)} ${esc(c.label)}</strong>: ${byCat[c.id] || 0} project${byCat[c.id] === 1 ? '' : 's'}</li>`).join('')}
+    </ul>
+    <h2>Totals</h2>
+    <ul>
+      <li>Projects listed: <strong>${ps.length}</strong></li>
+      <li>Total community votes: <strong>${ps.reduce((s, p) => s + voteCount(p.id), 0)}</strong></li>
+      <li>Pending submissions: <strong>${ps.filter(p => p.pending).length}</strong></li>
+    </ul>`;
+}
+
+// ─── Init ──────────────────────────────────────────────────────────
+async function init() {
+  // Wire static-event listeners first so we can show errors
+  document.getElementById('openSubmit').addEventListener('click', openSubmitModal);
+  document.getElementById('search').addEventListener('input', debounce(e => {
+    searchQuery = e.target.value.trim();
+    renderGrid();
+  }, 150));
+  document.getElementById('sort').addEventListener('change', e => {
+    sortBy = e.target.value === 'newest' ? 'newest' : e.target.value === 'az' ? 'az' : 'votes';
+    renderGrid();
+  });
+  // Submit modal
+  const sm = document.getElementById('submitModal');
+  sm.addEventListener('click', e => { if (e.target === sm) closeSubmitModal(); });
+  sm.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSubmitModal));
+  sm.querySelector('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const sub = submitProject(e.target);
+    if (!sub) return;
+    closeSubmitModal();
+    renderCategoryChips();
+    renderGrid();
+    const url = buildGitHubIssueUrl(sub);
+    showToast('Saved locally — opening GitHub to file your submission', 'ok');
+    setTimeout(() => window.open(url, '_blank', 'noopener'), 600);
+  });
+  // Detail modal
+  const dm = document.getElementById('detailModal');
+  dm.addEventListener('click', e => { if (e.target === dm) closeDetail(); });
+  dm.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeDetail));
+  // Global keys
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDetail(); closeSubmitModal(); }
+    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      document.getElementById('search').focus();
+    }
+  });
+  window.addEventListener('hashchange', handleRoute);
+
+  // Load data
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    document.getElementById('grid').innerHTML = `
+      <div class="error">
+        <h2>Couldn't load the directory.</h2>
+        <p>${esc(err.message || 'Unknown error')}</p>
+        <p>Try <button class="btn primary inline" id="retry" type="button">reloading</button> or check <a href="https://github.com/DBOT-DC/dogechain-pulse" target="_blank" rel="noopener">GitHub</a> for status.</p>
+      </div>`;
+    document.getElementById('retry')?.addEventListener('click', () => location.reload());
+    return;
+  }
+
+  renderStats();
+  renderCategoryChips();
+  renderGrid();
+  handleRoute();
+
+  // Periodic block refresh
+  clearInterval(blockTimer);
+  blockTimer = setInterval(refreshBlock, REFRESH_BLOCK_MS);
+}
+
+document.addEventListener('DOMContentLoaded', init);

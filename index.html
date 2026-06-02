@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0e0f12" />
+  <meta name="description" content="Dogechain Pulse — the community-driven discovery hub for projects, communities, and builders on the Dogechain Network." />
+  <title>Dogechain Pulse — discover the network</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%93%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div>
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">🐾</span>
+          <span class="brand-name">Dogechain Pulse</span>
+        </div>
+        <h1>Discover the Dogechain Network.</h1>
+        <p class="lede">A community-driven directory of projects, protocols, and people building on Dogechain. Upvote what matters, submit what's missing.</p>
+        <div class="hero-cta">
+          <button class="btn primary" id="openSubmit" type="button">＋ Submit a project</button>
+          <a class="btn ghost" href="https://github.com/DBOT-DC/dogechain-pulse" rel="noopener" target="_blank">GitHub</a>
+        </div>
+      </div>
+      <div class="hero-stats" id="statsBar" aria-label="Ecosystem stats"></div>
+    </header>
+
+    <section class="toolbar" aria-label="Browse and filter">
+      <div class="search">
+        <input id="search" type="search" placeholder="Search by name, tagline, or contract address…" aria-label="Search projects" />
+      </div>
+      <div class="sort">
+        <label for="sort">Sort</label>
+        <select id="sort" aria-label="Sort projects">
+          <option value="votes">Most upvoted</option>
+          <option value="newest">Newest</option>
+          <option value="az">A → Z</option>
+        </select>
+      </div>
+    </section>
+
+    <nav class="catbar" id="catBar" aria-label="Categories"></nav>
+
+    <main id="grid" class="grid" aria-label="Project directory"></main>
+
+    <footer class="foot">
+      <div>Dogechain Pulse is a <a href="https://dbot.dog" rel="noopener" target="_blank">DBOT</a> project · open source · community-run</div>
+      <div class="foot-links">
+        <a href="#/about">About</a>
+        <a href="#/methodology">Methodology</a>
+        <a href="#/stats">Stats</a>
+        <a href="https://github.com/DBOT-DC/dogechain-pulse/blob/main/data/projects.json" rel="noopener" target="_blank">Public API</a>
+        <a href="https://dogechain.dog" rel="noopener" target="_blank">Dogechain Network</a>
+      </div>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="modal" id="submitModal" aria-labelledby="submitTitle">
+    <form id="submitForm" method="dialog">
+      <header><h2 id="submitTitle">Submit a project</h2></header>
+      <p class="muted">Tell the community what's being built. Submissions are public immediately (with a "pending" badge) and get verified by the community through upvotes.</p>
+
+      <label>PROJECT NAME *
+        <input name="name" required maxlength="60" autocomplete="off" />
+      </label>
+      <label>TAGLINE *
+        <input name="tagline" required maxlength="80" autocomplete="off" />
+      </label>
+      <label>DESCRIPTION
+        <textarea name="description" maxlength="400" rows="3"></textarea>
+      </label>
+      <label>CATEGORY *
+        <select name="category" required>
+          <option value="">Choose one…</option>
+        </select>
+      </label>
+      <div class="row">
+        <label>WEBSITE
+          <input name="website" type="url" placeholder="https://" autocomplete="off" />
+        </label>
+        <label>X / TWITTER
+          <input name="twitter" placeholder="@handle or full URL" autocomplete="off" />
+        </label>
+      </div>
+      <div class="row">
+        <label>TELEGRAM
+          <input name="telegram" placeholder="t.me/…" autocomplete="off" />
+        </label>
+        <label>CONTRACT ADDRESS (DOGECHAIN, OPTIONAL)
+          <input name="contract" pattern="0x[a-fA-F0-9]{40}" placeholder="0x…" autocomplete="off" />
+        </label>
+      </div>
+      <label>YOUR NAME (SO THE COMMUNITY KNOWS WHO SUBMITTED IT)
+        <input name="submitter" maxlength="40" autocomplete="off" />
+      </label>
+
+      <footer>
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Submit for review</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog class="detail" id="detailModal" aria-labelledby="detailTitle">
+    <button class="close-x" type="button" data-close aria-label="Close">×</button>
+    <div id="detailBody"></div>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
