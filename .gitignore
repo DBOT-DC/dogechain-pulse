@@ -3,4 +3,4 @@ node_modules/
 .vercel
 *.log
 .cache/
-
+assets/*.png
